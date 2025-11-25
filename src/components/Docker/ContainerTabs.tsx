@@ -4,6 +4,7 @@ import { SegmentedControl, Card, Text, Badge, Stack, Code, SimpleGrid, Box, Tool
 import { IconTerminal } from '@tabler/icons-react';
 import { useState } from 'react';
 import type { DockerContainerInfo } from '@/types/api';
+import { ContainerLogs } from './ContainerLogs';
 
 export function ContainerTabs({ container }: { container: DockerContainerInfo }) {
   const [activeTab, setActiveTab] = useState('info');
@@ -16,6 +17,7 @@ export function ContainerTabs({ container }: { container: DockerContainerInfo })
           onChange={setActiveTab}
           data={[
             { label: 'Container Information', value: 'info' },
+            { label: 'Logs', value: 'logs' },
             { label: 'Raw Data', value: 'raw' },
             { 
               label: (
@@ -129,6 +131,10 @@ export function ContainerTabs({ container }: { container: DockerContainerInfo })
             </Card>
           )}
         </Stack>
+      )}
+
+      {activeTab === 'logs' && (
+        <ContainerLogs containerId={container.Id} />
       )}
 
       {activeTab === 'raw' && (

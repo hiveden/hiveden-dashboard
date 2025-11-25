@@ -32,7 +32,7 @@ export default async function Home() {
           </Group>
           
           <Text size="sm" c="dimmed">
-            <pre>{JSON.stringify(hwInfo.data, null, 2)}</pre>
+            {JSON.stringify(hwInfo.data, null, 2)}
           </Text>
         </Card>
       </SimpleGrid>
