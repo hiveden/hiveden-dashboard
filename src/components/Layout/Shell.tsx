@@ -2,7 +2,7 @@
 
 import { AppShell, Burger, Group, NavLink, Text, useMantineColorScheme, ActionIcon } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconBrandDocker, IconServer, IconShare, IconInfoCircle, IconSun, IconMoon } from '@tabler/icons-react';
+import { IconBrandDocker, IconServer, IconShare, IconInfoCircle, IconSun, IconMoon, IconTemplate, IconFileText } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -22,6 +22,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { label: 'Docker', icon: IconBrandDocker, link: '/docker' },
     { label: 'LXC', icon: IconServer, link: '/lxc' },
     { label: 'Network Shares', icon: IconShare, link: '/shares' },
+    { label: 'Templates', icon: IconTemplate, link: '/templates' },
+    { label: 'Logs', icon: IconFileText, link: '/logs' },
   ];
 
   return (
