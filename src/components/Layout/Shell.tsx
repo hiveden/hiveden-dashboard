@@ -2,7 +2,7 @@
 
 import { AppShell, Burger, Group, NavLink, Text, useMantineColorScheme, ActionIcon } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconBrandDocker, IconServer, IconShare, IconInfoCircle, IconSun, IconMoon, IconTemplate, IconFileText } from '@tabler/icons-react';
+import { IconBrandDocker, IconServer, IconShare, IconInfoCircle, IconSun, IconMoon, IconTemplate, IconFileText, IconPackage } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -24,6 +24,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { label: 'Network Shares', icon: IconShare, link: '/shares' },
     { label: 'Templates', icon: IconTemplate, link: '/templates' },
     { label: 'Logs', icon: IconFileText, link: '/logs' },
+  ];
+
+  const bottomNavItems = [
+    { label: 'Required Packages', icon: IconPackage, link: '/packages' },
   ];
 
   return (
@@ -48,19 +52,35 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar p="md">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.link}
-            component={Link}
-            href={item.link}
-            label={item.label}
-            leftSection={<item.icon size="1rem" stroke={1.5} />}
-            active={pathname === item.link || (item.link !== '/' && pathname.startsWith(item.link))}
-            variant="light"
-          />
-        ))}
+      <AppShell.Navbar p="md" style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1 }}>
+          {navItems.map((item) => (
+            <NavLink
+              key={item.link}
+              component={Link}
+              href={item.link}
+              label={item.label}
+              leftSection={<item.icon size="1rem" stroke={1.5} />}
+              active={pathname === item.link || (item.link !== '/' && pathname.startsWith(item.link))}
+              variant="light"
+            />
+          ))}
+        </div>
+        <div style={{ borderTop: '1px solid var(--mantine-color-gray-3)', paddingTop: '8px' }}>
+          {bottomNavItems.map((item) => (
+            <NavLink
+              key={item.link}
+              component={Link}
+              href={item.link}
+              label={item.label}
+              leftSection={<item.icon size="1rem" stroke={1.5} />}
+              active={pathname === item.link || (item.link !== '/' && pathname.startsWith(item.link))}
+              variant="light"
+            />
+          ))}
+        </div>
       </AppShell.Navbar>
+
 
       <AppShell.Main>
         {children}

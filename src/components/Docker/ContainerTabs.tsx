@@ -1,13 +1,61 @@
 'use client';
 
-import { SegmentedControl, Card, Text, Badge, Stack, Code, SimpleGrid, Box, Tooltip } from '@mantine/core';
+import { SegmentedControl, Card, Text, Badge, Stack, Code, SimpleGrid, Box, Tooltip, Loader, Center } from '@mantine/core';
 import { IconTerminal } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { DockerContainerInfo } from '@/types/api';
 import { ContainerLogs } from './ContainerLogs';
+import { Terminal } from '@/components/Terminal/Terminal';
+import { ShellService } from '@/services/shellService';
 
 export function ContainerTabs({ container }: { container: DockerContainerInfo }) {
   const [activeTab, setActiveTab] = useState('info');
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isLoadingShell, setIsLoadingShell] = useState(false);
+  const [shellError, setShellError] = useState<string | null>(null);
+  const shellService = new ShellService();
+
+  useEffect(() => {
+    const createShellSession = async () => {
+      if (activeTab === 'shell' && !sessionId && container.State === 'running') {
+        setIsLoadingShell(true);
+        setShellError(null);
+        try {
+          const session = await shellService.createDockerSession(container.Id, {
+            user: 'root',
+            working_dir: '/'
+          });
+          setSessionId(session.session_id);
+        } catch (error) {
+          console.error('Failed to create shell session:', error);
+          setShellError(error instanceof Error ? error.message : 'Failed to create shell session');
+        } finally {
+          setIsLoadingShell(false);
+        }
+      }
+    };
+
+    createShellSession();
+
+    // Cleanup: close session when component unmounts
+    return () => {
+      if (sessionId) {
+        shellService.closeSession(sessionId).catch(console.error);
+      }
+    };
+  }, [activeTab, container.Id, container.State]);
+
+  const handleCloseShell = async () => {
+    if (sessionId) {
+      try {
+        await shellService.closeSession(sessionId);
+        setSessionId(null);
+        setActiveTab('info');
+      } catch (error) {
+        console.error('Failed to close shell session:', error);
+      }
+    }
+  };
 
   return (
     <>
@@ -19,15 +67,7 @@ export function ContainerTabs({ container }: { container: DockerContainerInfo })
             { label: 'Container Information', value: 'info' },
             { label: 'Logs', value: 'logs' },
             { label: 'Raw Data', value: 'raw' },
-            { 
-              label: (
-                <Tooltip label="Not implemented yet" position="top">
-                  <span>Shell</span>
-                </Tooltip>
-              ),
-              value: 'shell',
-              disabled: true,
-            },
+            { label: 'Shell', value: 'shell' },
           ]}
           mb="md"
         />
@@ -147,10 +187,34 @@ export function ContainerTabs({ container }: { container: DockerContainerInfo })
       )}
 
       {activeTab === 'shell' && (
-        <Card shadow="sm" padding="lg" radius="md" withBorder>
-          <Text fw={500} size="lg" mb="md">Shell Access</Text>
-          <Text c="dimmed">This feature is not implemented yet.</Text>
-        </Card>
+        <>
+          {container.State !== 'running' ? (
+            <Card shadow="sm" padding="lg" radius="md" withBorder>
+              <Text fw={500} size="lg" mb="md">Shell Access</Text>
+              <Text c="dimmed">Container must be running to access shell.</Text>
+            </Card>
+          ) : isLoadingShell ? (
+            <Card shadow="sm" padding="lg" radius="md" withBorder>
+              <Center h={200}>
+                <Stack align="center" gap="md">
+                  <Loader size="md" />
+                  <Text c="dimmed">Creating shell session...</Text>
+                </Stack>
+              </Center>
+            </Card>
+          ) : shellError ? (
+            <Card shadow="sm" padding="lg" radius="md" withBorder>
+              <Text fw={500} size="lg" mb="md">Shell Access</Text>
+              <Text c="red">{shellError}</Text>
+            </Card>
+          ) : sessionId ? (
+            <Terminal 
+              sessionId={sessionId} 
+              onClose={handleCloseShell}
+              title={`Shell - ${container.Name || container.Id.substring(0, 12)}`}
+            />
+          ) : null}
+        </>
       )}
     </>
   );
