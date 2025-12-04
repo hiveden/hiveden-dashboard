@@ -61,6 +61,40 @@ export interface NetworkCreate {
   name: string;
 }
 
+// Container Create Request Types
+export interface CreateEnvVar {
+  name: string;
+  value: string;
+}
+
+export interface CreatePort {
+  host_port: number;
+  container_port: number;
+  protocol: "tcp" | "udp";
+}
+
+export interface CreateMount {
+  source: string;
+  target: string;
+  type: "bind" | "volume";
+}
+
+export interface ContainerCreateRequest {
+  // Docker Config
+  name: string;
+  image: string;
+  command?: string;
+  env?: CreateEnvVar[];
+  ports?: CreatePort[];
+  mounts?: CreateMount[];
+  labels?: Record<string, string>;
+
+  // System Metadata
+  is_container: boolean; // true = Run now, false = Save template only
+  enabled: boolean;      // Default true
+  type: "docker";        // Fixed value
+}
+
 // LXC Types
 export interface LXCContainerCreate {
   name: string;
@@ -119,10 +153,27 @@ export interface StorageStrategy {
 }
 
 // Package Types
+export enum PackageOperation {
+  INSTALL = "INSTALL",
+  UNINSTALL = "UNINSTALL"
+}
+
+export enum OSType {
+  ARCH = "arch",
+  DEBIAN = "debian",
+  UBUNTU = "ubuntu",
+  FEDORA = "fedora",
+  CENTOS = "centos",
+  RHEL = "rhel",
+  ALL = "all"
+}
+
 export interface PackageStatus {
   name: string;
   title: string;
   description: string;
-  operation: "INSTALL" | "UNINSTALL";
+  operation: PackageOperation;
+  os_types: OSType[];
+  tags: string[];     // e.g. ["storage", "raid"]
   installed: boolean;
 }

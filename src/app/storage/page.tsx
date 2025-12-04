@@ -1,4 +1,5 @@
-import { listStorageDevices, checkRequiredPackages } from '@/actions/storage';
+import { listStorageDevices } from '@/actions/storage';
+import { getRequiredPackages } from '@/actions/packages';
 import { StoragePageContent } from '@/components/Storage/StoragePageContent';
 
 export const dynamic = 'force-dynamic';
@@ -10,7 +11,7 @@ export default async function StoragePage() {
   try {
     const [disksRes, pkgsRes] = await Promise.all([
       listStorageDevices(),
-      checkRequiredPackages()
+      getRequiredPackages('storage')
     ]);
 
     disks = disksRes.data || [];

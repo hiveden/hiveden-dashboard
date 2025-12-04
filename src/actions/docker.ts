@@ -2,13 +2,13 @@
 
 import { fetchApi } from '@/lib/api';
 import { revalidatePath } from 'next/cache';
-import type { DataResponse, DockerContainer, NetworkCreate, SuccessResponse } from '@/types/api';
+import type { DataResponse, DockerContainer, NetworkCreate, SuccessResponse, ContainerCreateRequest } from '@/types/api';
 
 export async function listContainers(): Promise<DataResponse> {
   return fetchApi('/docker/containers');
 }
 
-export async function createContainer(container: DockerContainer): Promise<DataResponse> {
+export async function createContainer(container: ContainerCreateRequest): Promise<DataResponse> {
   return fetchApi('/docker/containers', {
     method: 'POST',
     body: JSON.stringify(container),

@@ -33,7 +33,7 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
 
   // Check if container is managed by Hiveden (has hiveden label)
   const isManagedByHiveden = (container: DockerContainerInfo): boolean => {
-    return !!(container.Labels && 'com.hiveden.managed' in container.Labels);
+    return !!(container.Labels && container.Labels['managed-by'] === 'hiveden');
   };
 
   // Pagination logic

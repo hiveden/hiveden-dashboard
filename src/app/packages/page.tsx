@@ -1,10 +1,21 @@
-'use client';
+import { getRequiredPackages } from '@/actions/packages';
+import { PackageList } from '@/components/Packages/PackageList';
+import { Container, Title, Text, Stack } from '@mantine/core';
 
-import { Container, Title, Text, Card, Stack } from '@mantine/core';
+export const dynamic = 'force-dynamic';
 
-export default function PackagesPage() {
+export default async function PackagesPage() {
+  let packages: any[] = [];
+
+  try {
+    const response = await getRequiredPackages();
+    packages = response.data || [];
+  } catch (error) {
+    console.error('Failed to fetch packages:', error);
+  }
+
   return (
-    <Container size="xl">
+    <Container size="xl" py="xl">
       <Stack gap="md">
         <div>
           <Title order={1}>Required Packages</Title>
@@ -13,11 +24,7 @@ export default function PackagesPage() {
           </Text>
         </div>
 
-        <Card shadow="sm" padding="lg" radius="md" withBorder>
-          <Text c="dimmed" ta="center" py="xl">
-            Package management functionality coming soon...
-          </Text>
-        </Card>
+        <PackageList initialPackages={packages} />
       </Stack>
     </Container>
   );

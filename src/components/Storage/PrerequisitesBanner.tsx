@@ -3,26 +3,22 @@
 import { PackageStatus } from '@/types/api';
 import { Alert, Button, Group, List, Text, ThemeIcon } from '@mantine/core';
 import { IconAlertCircle, IconTool } from '@tabler/icons-react';
+import { useRouter } from 'next/navigation';
 
 interface PrerequisitesBannerProps {
   packages: PackageStatus[];
 }
 
 export function PrerequisitesBanner({ packages }: PrerequisitesBannerProps) {
-  const requiredTools = ['mdadm', 'btrfs-progs', 'parted'];
-  const missingPackages = packages.filter(
-    (pkg) => requiredTools.includes(pkg.name) && !pkg.installed
-  );
+  const router = useRouter();
+  const missingPackages = packages.filter((pkg) => !pkg.installed);
 
   if (missingPackages.length === 0) {
     return null;
   }
 
   const handleInstall = () => {
-    // TODO: Implement WebSocket installer connection
-    // logic similar to Package Manager UI would go here
-    console.log('Installing packages:', missingPackages.map(p => p.name));
-    alert(`Please install missing packages: ${missingPackages.map(p => p.name).join(', ')}`);
+    router.push('/packages');
   };
 
   return (
