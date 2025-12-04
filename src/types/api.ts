@@ -85,3 +85,44 @@ export interface ZFSPoolCreate {
 export interface ZFSDatasetCreate {
   name: string;
 }
+
+// Storage Types
+export interface Partition {
+  name: string;       // e.g., "sda1"
+  path: string;       // e.g., "/dev/sda1"
+  size: number;       // in bytes
+  fstype: string | null; // e.g., "ext4", "vfat", "swap"
+  mountpoint: string | null; // e.g., "/", "/boot"
+}
+
+export interface Disk {
+  name: string;       // e.g., "sda"
+  path: string;       // e.g., "/dev/sda"
+  size: number;       // in bytes
+  model: string | null;
+  serial: string | null;
+  rotational: boolean; // true = HDD, false = SSD (Use for icons)
+  partitions: Partition[];
+  is_system: boolean;  // If true, display a "System" badge and disable selection
+  available: boolean;  // If true, this disk can be used for new storage strategies
+}
+
+export type RaidLevel = "raid0" | "raid1" | "raid5" | "raid6" | "raid10" | "single";
+
+export interface StorageStrategy {
+  name: string;        // e.g., "Balanced (RAID 5)"
+  description: string; // Marketing text explaining pros/cons
+  raid_level: RaidLevel;
+  disks: string[];     // Array of disk paths involved, e.g. ["/dev/sdb", "/dev/sdc"]
+  usable_capacity: number; // Expected size after formatting (bytes)
+  redundancy: string;  // e.g., "Can withstand 1 drive failure"
+}
+
+// Package Types
+export interface PackageStatus {
+  name: string;
+  title: string;
+  description: string;
+  operation: "INSTALL" | "UNINSTALL";
+  installed: boolean;
+}
