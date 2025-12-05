@@ -116,13 +116,26 @@ export const Terminal: React.FC<TerminalProps> = ({ sessionId, socketFactory, on
         }
 
         if (message.type === 'output') {
-          term.write(message.data.output);
+          term.writeln(message.data.output);
+        } else if (message.type === 'log') {
+          // Handle job logs
+          term.writeln(message.data.output);
         } else if (message.type === 'error') {
           term.writeln(`\x1b[1;31mError: ${message.message}\x1b[0m`);
         } else if (message.type === 'exit') {
           term.writeln('');
           term.writeln(`\x1b[1;33m● Session ended with exit code: ${message.data.exit_code}\x1b[0m`);
           setIsConnected(false);
+        } else if (message.type === 'job_completed') {
+          term.writeln('');
+          const color = message.data.status === 'completed' ? '\x1b[1;32m' : '\x1b[1;31m';
+          term.writeln(`${color}● Job ${message.data.status} (Exit Code: ${message.data.exit_code})\x1b[0m`);
+          setIsConnected(false);
+          // Keep the socket open for a moment or let the user close it?
+          // The requirement says "Close connection when job_completed message is received".
+          // setIsConnected(false) updates the UI badge.
+          // We might want to actually close the socket if the server doesn't.
+          ws.close();
         }
       };
 

@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Disk, PackageStatus, StorageStrategy } from '@/types/api';
-import { listStorageDevices, listStorageStrategies } from '@/actions/storage';
-import { Container, Title, Text, Tabs, Button, Group, Stack, Modal, LoadingOverlay } from '@mantine/core';
+import { listStorageDevices, listStorageStrategies, applyStorageStrategy } from '@/actions/storage';
+import { Container, Title, Text, Tabs, Button, Group, Stack, Modal, LoadingOverlay, Alert } from '@mantine/core';
 import { useInterval } from '@mantine/hooks';
-import { IconDatabase, IconShare } from '@tabler/icons-react';
+import { IconDatabase, IconShare, IconAlertTriangle } from '@tabler/icons-react';
 import { DiskInventory } from './DiskInventory';
 import { StrategyWizard } from './StrategyWizard';
 import { PrerequisitesBanner } from './PrerequisitesBanner';
+import { Terminal } from '@/components/Terminal/Terminal';
 
 interface StoragePageContentProps {
   initialDisks: Disk[];
@@ -20,6 +21,12 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
   const [strategies, setStrategies] = useState<StorageStrategy[]>([]);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [loadingStrategies, setLoadingStrategies] = useState(false);
+  
+  // Application Flow State
+  const [selectedStrategy, setSelectedStrategy] = useState<StorageStrategy | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [jobId, setJobId] = useState<string | null>(null);
   
   // Polling for disk updates
   const refreshDisks = useCallback(async () => {
@@ -56,10 +63,54 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
   };
 
   const handleStrategySelect = (strategy: StorageStrategy) => {
-    console.log('Selected strategy:', strategy);
-    // TODO: Implement apply strategy endpoint
-    setIsWizardOpen(false);
+    setSelectedStrategy(strategy);
+    setIsWizardOpen(false); // Close wizard
+    setIsConfirmOpen(true); // Open confirmation
   };
+
+  const handleConfirmApply = async () => {
+    if (!selectedStrategy) return;
+    
+    setIsConfirmOpen(false);
+    
+    try {
+      const response = await applyStorageStrategy(selectedStrategy);
+      if (response.data && response.data.job_id) {
+        setJobId(response.data.job_id);
+        setIsTerminalOpen(true);
+      }
+    } catch (error) {
+      console.error('Failed to apply strategy:', error);
+      // Ideally show error notification here
+    }
+  };
+
+  const socketFactory = useCallback(() => {
+    if (!jobId) return new WebSocket('ws://localhost:8000'); // Fallback
+    
+    // Construct WebSocket URL using ShellService logic (or manually)
+    // Assuming ShellService base URL logic is consistent
+    // We need to access private wsUrl or reconstruct it. 
+    // Let's use the public baseUrl and replace protocol.
+    const wsUrl = 'ws://localhost:8000'; // Hardcoded for now as in ShellService default
+    const ws = new WebSocket(`${wsUrl}/shell/ws/jobs/${jobId}`);
+    
+    ws.addEventListener('message', (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'job_completed') {
+           // Refresh disks when job is done
+           setTimeout(() => {
+             refreshDisks();
+           }, 2000);
+        }
+      } catch {
+        // ignore
+      }
+    });
+    
+    return ws;
+  }, [jobId, refreshDisks]);
 
   return (
     <Container size="xl" py="xl">
@@ -103,6 +154,7 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
         </Tabs>
       </Stack>
 
+      {/* Wizard Modal */}
       <Modal 
         opened={isWizardOpen} 
         onClose={() => setIsWizardOpen(false)}
@@ -118,6 +170,56 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
                 />
             )}
         </div>
+      </Modal>
+
+      {/* Confirmation Modal */}
+      <Modal
+        opened={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        title="Confirm Storage Configuration"
+        size="md"
+      >
+        <Stack gap="md">
+          <Alert color="red" icon={<IconAlertTriangle />}>
+            Warning: This action will erase ALL data on the selected disks.
+          </Alert>
+          
+          {selectedStrategy && (
+            <Stack gap="xs">
+              <Text fw={500}>{selectedStrategy.name}</Text>
+              <Text size="sm">The following disks will be formatted:</Text>
+              <Stack gap={4} pl="md">
+                {selectedStrategy.disks.map(d => (
+                  <Text key={d} size="xs" ff="monospace">{d}</Text>
+                ))}
+              </Stack>
+            </Stack>
+          )}
+
+          <Group justify="flex-end" mt="md">
+            <Button variant="light" color="gray" onClick={() => setIsConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button color="red" onClick={handleConfirmApply}>
+              I Understand, Apply Configuration
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Terminal/Progress Modal */}
+      <Modal
+        opened={isTerminalOpen}
+        onClose={() => setIsTerminalOpen(false)}
+        title="Applying Storage Configuration"
+        size="xl"
+        closeOnClickOutside={false}
+      >
+        <Terminal 
+          title="Configuration Log"
+          socketFactory={socketFactory}
+          onClose={() => setIsTerminalOpen(false)}
+        />
       </Modal>
     </Container>
   );

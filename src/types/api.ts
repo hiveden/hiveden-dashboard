@@ -152,6 +152,29 @@ export interface StorageStrategy {
   redundancy: string;  // e.g., "Can withstand 1 drive failure"
 }
 
+export interface ApplyStrategyResponse {
+  job_id: string;
+}
+
+// WebSocket Messages
+export interface JobLogMessage {
+  type: "log";
+  data: {
+    timestamp: string;
+    output: string;
+    error: boolean;
+  };
+}
+
+export interface JobCompletedMessage {
+  type: "job_completed";
+  data: {
+    id: string;
+    status: "completed" | "failed";
+    exit_code: number;
+  };
+}
+
 // Package Types
 export enum PackageOperation {
   INSTALL = "INSTALL",
