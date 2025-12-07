@@ -11,6 +11,10 @@ export async function listStorageStrategies(): Promise<DataResponse> {
   return fetchApi('/storage/strategies');
 }
 
+export async function getDiskDetails(deviceName: string): Promise<DataResponse> {
+  return fetchApi(`/storage/devices/${deviceName}`);
+}
+
 export async function applyStorageStrategy(strategy: StorageStrategy): Promise<DataResponse<ApplyStrategyResponse>> {
   return fetchApi('/storage/apply', {
     method: 'POST',

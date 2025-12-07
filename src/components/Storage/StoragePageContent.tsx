@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Disk, PackageStatus, StorageStrategy } from '@/types/api';
-import { listStorageDevices, listStorageStrategies, applyStorageStrategy } from '@/actions/storage';
+import { Disk, PackageStatus, StorageStrategy, DiskDetail } from '@/types/api';
+import { listStorageDevices, listStorageStrategies, applyStorageStrategy, getDiskDetails } from '@/actions/storage';
 import { Container, Title, Text, Tabs, Button, Group, Stack, Modal, LoadingOverlay, Alert } from '@mantine/core';
 import { useInterval } from '@mantine/hooks';
 import { IconDatabase, IconShare, IconAlertTriangle } from '@tabler/icons-react';
@@ -10,6 +10,7 @@ import { DiskInventory } from './DiskInventory';
 import { StrategyWizard } from './StrategyWizard';
 import { PrerequisitesBanner } from './PrerequisitesBanner';
 import { Terminal } from '@/components/Terminal/Terminal';
+import { DiskDetails } from './DiskDetails';
 
 interface StoragePageContentProps {
   initialDisks: Disk[];
@@ -27,6 +28,11 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
+
+  // Disk Details State
+  const [selectedDiskDetail, setSelectedDiskDetail] = useState<DiskDetail | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   
   // Polling for disk updates
   const refreshDisks = useCallback(async () => {
@@ -85,6 +91,25 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
     }
   };
 
+  const handleDiskClick = async (disk: Disk) => {
+    setLoadingDetails(true);
+    setIsDetailsOpen(true);
+    setSelectedDiskDetail(null); // Reset previous
+
+    try {
+      // Extract device name from path (e.g. /dev/sda -> sda)
+      const deviceName = disk.name; 
+      const response = await getDiskDetails(deviceName);
+      if (response.data) {
+        setSelectedDiskDetail(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch disk details:', error);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
   const socketFactory = useCallback(() => {
     if (!jobId) return new WebSocket('ws://localhost:8000'); // Fallback
     
@@ -139,7 +164,7 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
                 <Button onClick={handleCreatePool}>Create Storage Pool</Button>
               </Group>
               
-              <DiskInventory disks={disks} />
+              <DiskInventory disks={disks} onDiskClick={handleDiskClick} />
             </Stack>
           </Tabs.Panel>
 
@@ -220,6 +245,21 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
           socketFactory={socketFactory}
           onClose={() => setIsTerminalOpen(false)}
         />
+      </Modal>
+
+      {/* Disk Details Modal */}
+      <Modal
+        opened={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        title="Disk Details"
+        size="xl"
+      >
+        <div style={{ position: 'relative', minHeight: 200 }}>
+          <LoadingOverlay visible={loadingDetails} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
+          {!loadingDetails && selectedDiskDetail && (
+            <DiskDetails disk={selectedDiskDetail} />
+          )}
+        </div>
       </Modal>
     </Container>
   );

@@ -139,6 +139,38 @@ export interface Disk {
   partitions: Partition[];
   is_system: boolean;  // If true, display a "System" badge and disable selection
   available: boolean;  // If true, this disk can be used for new storage strategies
+  
+  // New Fields for RAID Grouping
+  raid_group?: string; // e.g. "md0", "md127"
+  raid_level?: string; // e.g. "raid1", "raid5"
+}
+
+export interface SmartAttribute {
+  id: number;
+  name: string;
+  value: number;
+  worst: number;
+  thresh: number;
+  raw: { value: number; string: string };
+}
+
+export interface SmartData {
+  healthy: boolean;      // true if overall assessment is PASSED
+  health_status: string; // "Passed" or "Failed"
+  temperature?: number;  // in Celsius
+  power_on_hours?: number;
+  power_cycles?: number;
+  model_name?: string;
+  serial_number?: string;
+  firmware_version?: string;
+  rotation_rate?: number;
+  attributes: SmartAttribute[]; // Raw table of SMART attributes
+}
+
+export interface DiskDetail extends Disk {
+  vendor?: string;
+  bus?: string;        // "ATA", "USB", "NVMe"
+  smart?: SmartData;   // Optional, might be null if smartctl fails or no support
 }
 
 export type RaidLevel = "raid0" | "raid1" | "raid5" | "raid6" | "raid10" | "single";
