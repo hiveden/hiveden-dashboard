@@ -227,6 +227,10 @@ export interface JobCompletedMessage {
   };
 }
 
+export interface VersionResponse {
+  version: string;
+}
+
 // Package Types
 export enum PackageOperation {
   INSTALL = "INSTALL",

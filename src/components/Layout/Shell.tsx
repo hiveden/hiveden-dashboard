@@ -1,17 +1,19 @@
 'use client';
 
-import { AppShell, Burger, Group, NavLink, Text, useMantineColorScheme, ActionIcon } from '@mantine/core';
+import { AppShell, Burger, Group, NavLink, Text, useMantineColorScheme, ActionIcon, Badge } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconBrandDocker, IconServer, IconShare, IconInfoCircle, IconSun, IconMoon, IconTemplate, IconFileText, IconPackage, IconDatabase } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useApplicationVersion } from '@/lib/useApplicationVersion';
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const [mounted, setMounted] = useState(false);
+  const { formattedVersion, frontendVersion, isLoading } = useApplicationVersion();
 
   useEffect(() => {
     setMounted(true);
@@ -47,9 +49,19 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
             <Text fw={700} size="lg">Hiveden</Text>
           </Group>
-          <ActionIcon onClick={() => toggleColorScheme()} variant="default" size="lg" aria-label="Toggle color scheme">
-            {mounted && (colorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />)}
-          </ActionIcon>
+          <Group gap="xs">
+            <Badge variant="outline" color="gray">
+                UI: {frontendVersion}
+            </Badge>
+            {!isLoading && formattedVersion && (
+                <Badge variant="outline" color="gray">
+                    API: {formattedVersion}
+                </Badge>
+            )}
+            <ActionIcon onClick={() => toggleColorScheme()} variant="default" size="lg" aria-label="Toggle color scheme">
+                {mounted && (colorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />)}
+            </ActionIcon>
+          </Group>
         </Group>
       </AppShell.Header>
 
