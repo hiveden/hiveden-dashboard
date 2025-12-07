@@ -175,6 +175,26 @@ export interface DiskDetail extends Disk {
 
 export type RaidLevel = "raid0" | "raid1" | "raid5" | "raid6" | "raid10" | "single";
 
+export interface BtrfsVolume {
+  device: string;       // e.g., "/dev/sdb1"
+  mountpoint: string;   // e.g., "/mnt/data"
+  label?: string;       // e.g., "data" (optional)
+}
+
+export interface BtrfsShare {
+  name: string;         // Subvolume name (e.g. "documents")
+  parent_path: string;  // Where it lives on disk (e.g. "/mnt/data")
+  mount_path: string;   // Where it is exposed (e.g. "/shares/documents")
+  device: string;       // Underlying device
+  subvolid: string;     // Btrfs Subvolume ID
+}
+
+export interface CreateBtrfsShareRequest {
+  parent_path: string;  // Selected from BtrfsVolume.mountpoint
+  name: string;         // User input (subvolume name)
+  mount_path: string;   // User input (where to expose it)
+}
+
 export interface StorageStrategy {
   name: string;        // e.g., "Balanced (RAID 5)"
   description: string; // Marketing text explaining pros/cons

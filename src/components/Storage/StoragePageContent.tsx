@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Disk, PackageStatus, StorageStrategy, DiskDetail } from '@/types/api';
-import { listStorageDevices, listStorageStrategies, applyStorageStrategy, getDiskDetails } from '@/actions/storage';
-import { Container, Title, Text, Tabs, Button, Group, Stack, Modal, LoadingOverlay, Alert } from '@mantine/core';
+import { Disk, PackageStatus, StorageStrategy, DiskDetail, BtrfsVolume, BtrfsShare } from '@/types/api';
+import { listStorageDevices, listStorageStrategies, applyStorageStrategy, getDiskDetails, listBtrfsVolumes, createBtrfsShare, listBtrfsShares } from '@/actions/storage';
+import { Container, Title, Text, Tabs, Button, Group, Stack, Modal, LoadingOverlay, Alert, TextInput, Select, Table, ThemeIcon, Badge } from '@mantine/core';
 import { useInterval } from '@mantine/hooks';
-import { IconDatabase, IconShare, IconAlertTriangle } from '@tabler/icons-react';
+import { IconDatabase, IconShare, IconAlertTriangle, IconFolderPlus, IconFolder } from '@tabler/icons-react';
 import { DiskInventory } from './DiskInventory';
 import { StrategyWizard } from './StrategyWizard';
 import { PrerequisitesBanner } from './PrerequisitesBanner';
@@ -33,6 +33,21 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
   const [selectedDiskDetail, setSelectedDiskDetail] = useState<DiskDetail | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
+
+  // Shares State
+  const [btrfsVolumes, setBtrfsVolumes] = useState<BtrfsVolume[]>([]);
+  const [btrfsShares, setBtrfsShares] = useState<BtrfsShare[]>([]);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [loadingVolumes, setLoadingVolumes] = useState(false);
+  const [creatingShare, setCreatingShare] = useState(false);
+  const [shareSuccess, setShareSuccess] = useState(false);
+  
+  // Share Form State
+  const [shareForm, setShareForm] = useState({
+    volume: '',
+    name: '',
+    mountPath: ''
+  });
   
   // Polling for disk updates
   const refreshDisks = useCallback(async () => {
@@ -45,8 +60,28 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
       console.error('Failed to refresh disks:', error);
     }
   }, []);
+  
+  const refreshShares = useCallback(async () => {
+      try {
+          const response = await listBtrfsShares();
+          console.log(response);
+          if (response.data) {
+              setBtrfsShares(response.data);
+          }
+      } catch (error) {
+          console.error('Failed to refresh shares:', error);
+      }
+  }, []);
 
-  const { start, stop } = useInterval(refreshDisks, 30000);
+  const { start, stop } = useInterval(() => {
+      refreshDisks();
+      refreshShares(); // Also refresh shares periodically
+  }, 30000);
+
+  // Initial load for shares
+  useEffect(() => {
+      refreshShares();
+  }, [refreshShares]);
 
   useEffect(() => {
     start();
@@ -110,6 +145,59 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
     }
   };
 
+  const handleOpenShareModal = async () => {
+    setLoadingVolumes(true);
+    setIsShareModalOpen(true);
+    setShareSuccess(false);
+    setShareForm({ volume: '', name: '', mountPath: '' });
+    
+    try {
+        const response = await listBtrfsVolumes();
+        if (response.data) {
+            setBtrfsVolumes(response.data);
+        }
+    } catch (error) {
+        console.error('Failed to fetch volumes:', error);
+    } finally {
+        setLoadingVolumes(false);
+    }
+  };
+
+  const handleShareNameChange = (name: string) => {
+     // Auto-fill mount path if it hasn't been manually edited
+     const sanitized = name.replace(/[^a-zA-Z0-9]/g, '');
+     setShareForm(prev => ({
+         ...prev,
+         name: sanitized,
+         mountPath: sanitized ? `/shares/${sanitized}` : ''
+     }));
+  };
+
+  const handleCreateShare = async () => {
+      if (!shareForm.volume || !shareForm.name || !shareForm.mountPath) return;
+      
+      setCreatingShare(true);
+      try {
+          await createBtrfsShare({
+              parent_path: shareForm.volume,
+              name: shareForm.name,
+              mount_path: shareForm.mountPath
+          });
+          setShareSuccess(true);
+          // Refresh shares list immediately
+          refreshShares();
+          setTimeout(() => {
+              setIsShareModalOpen(false);
+              setShareSuccess(false);
+          }, 1500);
+      } catch (error) {
+          console.error('Failed to create share:', error);
+          alert('Failed to create share');
+      } finally {
+          setCreatingShare(false);
+      }
+  };
+
   const socketFactory = useCallback(() => {
     if (!jobId) return new WebSocket('ws://localhost:8000'); // Fallback
     
@@ -170,10 +258,54 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
 
           <Tabs.Panel value="shares" pt="md">
             <Stack gap="md">
-               <Title order={3}>Shared Folders</Title>
+               <Group justify="space-between" align="center">
+                   <Title order={3}>Shared Folders</Title>
+                   <Button leftSection={<IconFolderPlus size={16} />} onClick={handleOpenShareModal}>
+                       Create Share
+                   </Button>
+               </Group>
+               
                <Text c="dimmed">
-                 Share management functionality will be available once storage pools are configured.
+                 Manage your Btrfs subvolumes and shares here.
                </Text>
+               
+               {btrfsShares.length === 0 ? (
+                   <Alert color="blue" title="No Shares Found" icon={<IconFolder size={20} />}>
+                       You haven&apos;t created any shares yet. Click &quot;Create Share&quot; to get started.
+                   </Alert>
+               ) : (
+                   <Table striped highlightOnHover withTableBorder withColumnBorders>
+                       <Table.Thead>
+                           <Table.Tr>
+                               <Table.Th>Name</Table.Th>
+                               <Table.Th>Mount Path</Table.Th>
+                               <Table.Th>Storage Pool (Parent)</Table.Th>
+                               <Table.Th>Device</Table.Th>
+                               <Table.Th>ID</Table.Th>
+                           </Table.Tr>
+                       </Table.Thead>
+                       <Table.Tbody>
+                           {btrfsShares.map((share) => (
+                               <Table.Tr key={share.mount_path}>
+                                   <Table.Td fw={500}>
+                                       <Group gap="xs">
+                                           <ThemeIcon size="sm" variant="light" color="blue">
+                                               <IconFolder size={14} />
+                                           </ThemeIcon>
+                                           {share.name}
+                                       </Group>
+                                   </Table.Td>
+                                   <Table.Td>{share.mount_path}</Table.Td>
+                                   <Table.Td>{share.parent_path}</Table.Td>
+                                   <Table.Td>
+                                       <Badge variant="outline" color="gray">{share.device}</Badge>
+                                   </Table.Td>
+                                   <Table.Td>{share.subvolid}</Table.Td>
+                               </Table.Tr>
+                           ))}
+                       </Table.Tbody>
+                   </Table>
+               )}
             </Stack>
           </Tabs.Panel>
         </Tabs>
@@ -259,6 +391,64 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
           {!loadingDetails && selectedDiskDetail && (
             <DiskDetails disk={selectedDiskDetail} />
           )}
+        </div>
+      </Modal>
+
+      {/* Create Share Modal */}
+      <Modal
+        opened={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title="Create New Share"
+      >
+        <div style={{ position: 'relative' }}>
+            <LoadingOverlay visible={loadingVolumes || creatingShare} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
+            
+            {shareSuccess ? (
+                <Alert color="green" title="Success">
+                    Share created successfully!
+                </Alert>
+            ) : (
+                <Stack gap="md">
+                    <Select
+                        label="Select Storage Pool"
+                        placeholder="Choose a Btrfs volume"
+                        data={btrfsVolumes.map(v => ({
+                            value: v.mountpoint,
+                            label: `${v.mountpoint} ${v.label ? `(${v.label})` : ''}`
+                        }))}
+                        value={shareForm.volume}
+                        onChange={(val) => setShareForm(prev => ({ ...prev, volume: val || '' }))}
+                    />
+                    
+                    <TextInput
+                        label="Share Name"
+                        placeholder="e.g. documents"
+                        description="Alphanumeric characters only"
+                        value={shareForm.name}
+                        onChange={(e) => handleShareNameChange(e.currentTarget.value)}
+                    />
+                    
+                    <TextInput
+                        label="Mount Path"
+                        placeholder="/shares/..."
+                        value={shareForm.mountPath}
+                        onChange={(e) => setShareForm(prev => ({ ...prev, mountPath: e.currentTarget.value }))}
+                        description="Where this share will be accessible in the system"
+                    />
+                    
+                    <Group justify="flex-end" mt="md">
+                        <Button variant="light" onClick={() => setIsShareModalOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button 
+                            onClick={handleCreateShare}
+                            disabled={!shareForm.volume || !shareForm.name || !shareForm.mountPath}
+                        >
+                            Create Share
+                        </Button>
+                    </Group>
+                </Stack>
+            )}
         </div>
       </Modal>
     </Container>
