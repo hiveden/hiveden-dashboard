@@ -25,6 +25,12 @@ export async function stopContainer(containerId: string): Promise<DataResponse> 
   return result;
 }
 
+export async function startContainer(containerId: string): Promise<DataResponse> {
+  const result = await fetchApi(`/docker/containers/${containerId}/start`, { method: 'POST' });
+  revalidatePath('/docker');
+  return result;
+}
+
 export async function removeContainer(containerId: string): Promise<SuccessResponse> {
   const result = await fetchApi(`/docker/containers/${containerId}`, { method: 'DELETE' });
   revalidatePath('/docker');

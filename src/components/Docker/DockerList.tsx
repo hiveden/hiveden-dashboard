@@ -1,8 +1,8 @@
 'use client';
 
-import { stopContainer, removeContainer } from '@/actions/docker';
+import { stopContainer, startContainer, removeContainer } from '@/actions/docker';
 import { Table, Group, Badge, ActionIcon, Pagination, Stack, Select, Text, Checkbox } from '@mantine/core';
-import { IconTrash, IconPlayerStop, IconEye, IconCheck, IconX } from '@tabler/icons-react';
+import { IconTrash, IconPlayerStop, IconPlayerPlay, IconEye, IconCheck, IconX } from '@tabler/icons-react';
 import { useState } from 'react';
 import type { DockerContainerInfo } from '@/types/api';
 import Link from 'next/link';
@@ -17,6 +17,12 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
   const [loading, setLoading] = useState<string | null>(null);
   const [activePage, setActivePage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<string>('10');
+
+  const handleStart = async (id: string) => {
+    setLoading(id);
+    await startContainer(id);
+    setLoading(null);
+  };
 
   const handleStop = async (id: string) => {
     setLoading(id);
@@ -112,14 +118,25 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
           >
             <IconEye size={16} />
           </ActionIcon>
-          <ActionIcon 
-            variant="light" 
-            color="orange" 
-            onClick={() => handleStop(container.Id)}
-            loading={loading === container.Id}
-          >
-            <IconPlayerStop size={16} />
-          </ActionIcon>
+          {container.State === 'running' ? (
+            <ActionIcon 
+              variant="light" 
+              color="orange" 
+              onClick={() => handleStop(container.Id)}
+              loading={loading === container.Id}
+            >
+              <IconPlayerStop size={16} />
+            </ActionIcon>
+          ) : (
+            <ActionIcon 
+              variant="light" 
+              color="green" 
+              onClick={() => handleStart(container.Id)}
+              loading={loading === container.Id}
+            >
+              <IconPlayerPlay size={16} />
+            </ActionIcon>
+          )}
           <ActionIcon 
             variant="light" 
             color="red" 

@@ -3,7 +3,7 @@
 import { Button, Group } from '@mantine/core';
 import { IconPlayerPlay, IconPlayerStop, IconRefresh, IconTrash } from '@tabler/icons-react';
 import { useState } from 'react';
-import { stopContainer, removeContainer } from '@/actions/docker';
+import { stopContainer, startContainer, removeContainer } from '@/actions/docker';
 import { useRouter } from 'next/navigation';
 
 export function ContainerActions({ containerId, containerState }: { containerId: string, containerState: string }) {
@@ -12,8 +12,9 @@ export function ContainerActions({ containerId, containerState }: { containerId:
 
   const handleStart = async () => {
     setLoading('start');
-    // TODO: Implement start action when available in API
+    await startContainer(containerId);
     setLoading(null);
+    router.refresh();
   };
 
   const handleStop = async () => {
