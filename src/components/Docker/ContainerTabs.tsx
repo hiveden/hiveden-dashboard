@@ -2,7 +2,7 @@
 
 import { SegmentedControl, Card, Text, Badge, Stack, Code, SimpleGrid, Box, Tooltip, Loader, Center } from '@mantine/core';
 import { IconTerminal } from '@tabler/icons-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Container as DockerContainerInfo, EnvVar, Mount } from '@/lib/client';
 import { ContainerLogs } from './ContainerLogs';
 import { Terminal } from '@/components/Terminal/Terminal';
@@ -13,12 +13,19 @@ interface ExtendedContainer extends DockerContainerInfo {
   Mounts?: Mount[];
 }
 
+interface PortBinding {
+  HostPort?: string | number;
+  host_port?: number;
+  container_port?: number;
+  protocol?: string;
+}
+
 export function ContainerTabs({ container }: { container: ExtendedContainer }) {
   const [activeTab, setActiveTab] = useState('info');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoadingShell, setIsLoadingShell] = useState(false);
   const [shellError, setShellError] = useState<string | null>(null);
-  const shellService = new ShellService();
+  const shellService = useMemo(() => new ShellService(), []);
 
   useEffect(() => {
     const createShellSession = async () => {
@@ -48,7 +55,7 @@ export function ContainerTabs({ container }: { container: ExtendedContainer }) {
         shellService.closeSession(sessionId).catch(console.error);
       }
     };
-  }, [activeTab, container.Id, container.State]);
+  }, [activeTab, container.Id, container.State, sessionId, shellService]);
 
   const handleCloseShell = async () => {
     if (sessionId) {
@@ -134,7 +141,7 @@ export function ContainerTabs({ container }: { container: ExtendedContainer }) {
             <Card shadow="sm" padding="lg" radius="md" withBorder>
               <Text fw={500} size="lg" mb="md">Port Mappings</Text>
               <SimpleGrid cols={{ base: 1, md: 2 }}>
-                {Object.values(container.Ports).flat().map((port: any, idx) => (
+                {Object.values(container.Ports).flat().map((port: PortBinding, idx) => (
                   <div key={idx}>
                     <Text size="sm">
                       <Code>{port.HostPort || port.host_port}</Code> → <Code>{port.container_port || '?'}</Code>

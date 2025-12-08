@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getVersion } from '@/actions/info';
+import type { VersionInfo as ClientVersionInfo } from '@/lib/client';
 
 interface VersionInfo {
   rawVersion: string;
@@ -25,7 +26,7 @@ export function useApplicationVersion(): VersionInfo {
     const fetchVersion = async () => {
       try {
         const response = await getVersion();
-        const data = response.data as any; // Cast for access
+        const data = response.data as ClientVersionInfo; // Typed cast
         if (data?.version) {
           const version = data.version;
           setRawVersion(version);

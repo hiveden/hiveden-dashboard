@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import type { Terminal as XTerm } from 'xterm';
 import type { FitAddon } from '@xterm/addon-fit';
 import { Card, Badge, Group, ActionIcon, Text, Box } from '@mantine/core';
@@ -21,7 +21,7 @@ export const Terminal: React.FC<TerminalProps> = ({ sessionId, socketFactory, on
   const fitAddonRef = useRef<FitAddon | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const shellService = new ShellService();
+  const shellService = useMemo(() => new ShellService(), []);
 
   useEffect(() => {
     if (!terminalRef.current) return;

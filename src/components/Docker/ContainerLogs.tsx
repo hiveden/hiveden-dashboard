@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Card, Text, Stack, Group, Switch, NumberInput, Button, Code } from '@mantine/core';
 import { IconRefresh } from '@tabler/icons-react';
 
@@ -26,7 +26,7 @@ export function ContainerLogs({ containerId }: ContainerLogsProps) {
     }
   }, [logs, follow]);
 
-  const connectToLogs = () => {
+  const connectToLogs = useCallback(() => {
     // Close existing connection
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
@@ -56,18 +56,22 @@ export function ContainerLogs({ containerId }: ContainerLogsProps) {
     };
 
     eventSourceRef.current = eventSource;
-  };
+  }, [containerId, follow, tail]);
 
   useEffect(() => {
-    connectToLogs();
+    // Use setTimeout to avoid synchronous setState warning
+    const timer = setTimeout(() => {
+        connectToLogs();
+    }, 0);
 
     // Cleanup on unmount
     return () => {
+      clearTimeout(timer);
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
       }
     };
-  }, [containerId, follow, tail]);
+  }, [connectToLogs]);
 
   const handleReconnect = () => {
     connectToLogs();
