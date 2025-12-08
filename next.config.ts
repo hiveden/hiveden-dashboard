@@ -27,6 +27,7 @@ if (process.env.APP_VERSION) {
 
 const nextConfig: NextConfig = {
   /* config options here */
+  output: 'standalone',
   reactCompiler: true,
   env: {
     NEXT_PUBLIC_APP_VERSION: version,
