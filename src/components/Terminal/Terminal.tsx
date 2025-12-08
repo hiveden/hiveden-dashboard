@@ -217,7 +217,7 @@ export const Terminal: React.FC<TerminalProps> = ({ sessionId, socketFactory, on
         xtermRef.current.dispose();
       }
     };
-  }, [sessionId, socketFactory]);
+  }, [sessionId, socketFactory, shellService, title]);
 
   return (
     <Card shadow="sm" padding="0" radius="md" withBorder>

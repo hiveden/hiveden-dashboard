@@ -3,12 +3,17 @@
 import { SegmentedControl, Card, Text, Badge, Stack, Code, SimpleGrid, Box, Tooltip, Loader, Center } from '@mantine/core';
 import { IconTerminal } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
-import type { DockerContainerInfo } from '@/types/api';
+import type { Container as DockerContainerInfo, EnvVar, Mount } from '@/lib/client';
 import { ContainerLogs } from './ContainerLogs';
 import { Terminal } from '@/components/Terminal/Terminal';
 import { ShellService } from '@/services/shellService';
 
-export function ContainerTabs({ container }: { container: DockerContainerInfo }) {
+interface ExtendedContainer extends DockerContainerInfo {
+  Env?: EnvVar[];
+  Mounts?: Mount[];
+}
+
+export function ContainerTabs({ container }: { container: ExtendedContainer }) {
   const [activeTab, setActiveTab] = useState('info');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoadingShell, setIsLoadingShell] = useState(false);
@@ -117,22 +122,22 @@ export function ContainerTabs({ container }: { container: DockerContainerInfo })
               <Stack gap="xs">
                 {container.Env.map((env, idx) => (
                   <div key={idx}>
-                    <Text size="sm" c="dimmed">{env.Name}</Text>
-                    <Code block>{env.Value}</Code>
+                    <Text size="sm" c="dimmed">{env.name}</Text>
+                    <Code block>{env.value}</Code>
                   </div>
                 ))}
               </Stack>
             </Card>
           )}
 
-          {container.Ports && container.Ports.length > 0 && (
+          {container.Ports && Object.values(container.Ports).length > 0 && (
             <Card shadow="sm" padding="lg" radius="md" withBorder>
               <Text fw={500} size="lg" mb="md">Port Mappings</Text>
               <SimpleGrid cols={{ base: 1, md: 2 }}>
-                {container.Ports.map((port, idx) => (
+                {Object.values(container.Ports).flat().map((port: any, idx) => (
                   <div key={idx}>
                     <Text size="sm">
-                      <Code>{port.HostPort}</Code> → <Code>{port.container_port}</Code>
+                      <Code>{port.HostPort || port.host_port}</Code> → <Code>{port.container_port || '?'}</Code>
                       {port.protocol && <Text span c="dimmed"> ({port.protocol})</Text>}
                     </Text>
                   </div>
@@ -164,7 +169,7 @@ export function ContainerTabs({ container }: { container: DockerContainerInfo })
                 {Object.entries(container.Labels).map(([key, value]) => (
                   <div key={key}>
                     <Text size="sm" c="dimmed">{key}</Text>
-                    <Code block>{value}</Code>
+                    <Code block>{String(value)}</Code>
                   </div>
                 ))}
               </SimpleGrid>

@@ -1,16 +1,17 @@
 'use server';
 
-import { fetchApi } from '@/lib/api';
-import type { DataResponse, VersionResponse } from '@/types/api';
+import '@/lib/api';
+import { InfoService } from '@/lib/client';
+import type { DataResponse } from '@/lib/client';
 
 export async function getOsInfo(): Promise<DataResponse> {
-  return fetchApi('/info/os');
+  return InfoService.getOsInfoEndpointInfoOsGet();
 }
 
 export async function getHwInfo(): Promise<DataResponse> {
-  return fetchApi('/info/hw');
+  return InfoService.getHwInfoEndpointInfoHwGet();
 }
 
-export async function getApplicationVersion(): Promise<DataResponse<VersionResponse>> {
-  return fetchApi('/info/version');
+export async function getVersion(): Promise<DataResponse> {
+  return InfoService.getVersionEndpointInfoVersionGet();
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Disk, PackageStatus, StorageStrategy, DiskDetail, BtrfsVolume, BtrfsShare } from '@/types/api';
+import type { Disk, PackageStatus, StorageStrategy, DiskDetail, BtrfsVolume, BtrfsShare } from '@/lib/client';
 import { listStorageDevices, listStorageStrategies, applyStorageStrategy, getDiskDetails, listBtrfsVolumes, createBtrfsShare, listBtrfsShares } from '@/actions/storage';
 import { Container, Title, Text, Tabs, Button, Group, Stack, Modal, LoadingOverlay, Alert, TextInput, Select, Table, ThemeIcon, Badge } from '@mantine/core';
 import { useInterval } from '@mantine/hooks';
@@ -54,7 +54,7 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
     try {
       const response = await listStorageDevices();
       if (response.data) {
-        setDisks(response.data);
+        setDisks(response.data as Disk[]);
       }
     } catch (error) {
       console.error('Failed to refresh disks:', error);
@@ -66,7 +66,7 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
           const response = await listBtrfsShares();
           console.log(response);
           if (response.data) {
-              setBtrfsShares(response.data);
+              setBtrfsShares(response.data as BtrfsShare[]);
           }
       } catch (error) {
           console.error('Failed to refresh shares:', error);
@@ -94,7 +94,7 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
     try {
       const response = await listStorageStrategies();
       if (response.data) {
-        setStrategies(response.data);
+        setStrategies(response.data as StorageStrategy[]);
       }
     } catch (error) {
       console.error('Failed to fetch strategies:', error);
@@ -116,8 +116,9 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
     
     try {
       const response = await applyStorageStrategy(selectedStrategy);
-      if (response.data && response.data.job_id) {
-        setJobId(response.data.job_id);
+      const data = response.data as any;
+      if (data && data.job_id) {
+        setJobId(data.job_id);
         setIsTerminalOpen(true);
       }
     } catch (error) {
@@ -136,7 +137,7 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
       const deviceName = disk.name; 
       const response = await getDiskDetails(deviceName);
       if (response.data) {
-        setSelectedDiskDetail(response.data);
+        setSelectedDiskDetail(response.data as DiskDetail);
       }
     } catch (error) {
       console.error('Failed to fetch disk details:', error);
@@ -154,7 +155,7 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
     try {
         const response = await listBtrfsVolumes();
         if (response.data) {
-            setBtrfsVolumes(response.data);
+            setBtrfsVolumes(response.data as BtrfsVolume[]);
         }
     } catch (error) {
         console.error('Failed to fetch volumes:', error);

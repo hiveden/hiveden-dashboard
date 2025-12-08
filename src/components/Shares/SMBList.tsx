@@ -4,8 +4,9 @@ import { deleteSmbShare } from '@/actions/shares';
 import { Table, Group, ActionIcon, Badge } from '@mantine/core';
 import { IconTrash } from '@tabler/icons-react';
 import { useState } from 'react';
+import type { SMBShare } from '@/lib/client';
 
-export function SMBList({ shares }: { shares: any[] }) {
+export function SMBList({ shares }: { shares: SMBShare[] }) {
   const [loading, setLoading] = useState<string | null>(null);
 
   const handleDelete = async (name: string) => {

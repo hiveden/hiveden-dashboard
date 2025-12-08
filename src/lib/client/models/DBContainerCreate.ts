@@ -1,0 +1,20 @@
+/* generated using openapi-typescript-codegen -- do not edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+import type { EnvVar } from './EnvVar';
+import type { Mount } from './Mount';
+import type { Port } from './Port';
+export type DBContainerCreate = {
+    name: string;
+    image: string;
+    command?: (string | null);
+    env?: (Array<EnvVar> | null);
+    ports?: (Array<Port> | null);
+    mounts?: (Array<Mount> | null);
+    labels?: (Record<string, string> | null);
+    is_container?: boolean;
+    enabled?: boolean;
+    type?: string;
+};
+

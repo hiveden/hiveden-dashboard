@@ -1,6 +1,7 @@
 import { listLxcContainers } from '@/actions/lxc';
 import { LXCList } from '@/components/LXC/LXCList';
 import { Container, Title } from '@mantine/core';
+import type { LXCContainer } from '@/lib/client';
 
 export default async function LXCPage() {
   const containers = await listLxcContainers();
@@ -8,7 +9,7 @@ export default async function LXCPage() {
   return (
     <Container fluid>
       <Title order={2} mb="lg">LXC Containers</Title>
-      <LXCList containers={containers.data || []} />
+      <LXCList containers={(containers.data as LXCContainer[]) || []} />
     </Container>
   );
 }

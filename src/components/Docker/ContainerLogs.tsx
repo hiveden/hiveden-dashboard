@@ -36,6 +36,7 @@ export function ContainerLogs({ containerId }: ContainerLogsProps) {
     setLogs([]);
 
     // Create new EventSource connection
+    // Hardcoded to localhost:8000 as per original. Ideally should come from config.
     const url = `http://localhost:8000/docker/containers/${containerId}/logs?follow=${follow}&tail=${tail}`;
     const eventSource = new EventSource(url);
 

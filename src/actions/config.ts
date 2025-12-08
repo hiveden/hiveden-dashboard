@@ -1,11 +1,9 @@
 'use server';
 
-import { fetchApi } from '@/lib/api';
-import type { DataResponse } from '@/types/api';
+import '@/lib/api';
+import { ConfigService } from '@/lib/client';
+import type { DataResponse } from '@/lib/client';
 
 export async function submitConfig(config: string): Promise<DataResponse> {
-  return fetchApi('/config', {
-    method: 'POST',
-    body: JSON.stringify(config),
-  });
+  return ConfigService.submitConfigConfigPost(config);
 }

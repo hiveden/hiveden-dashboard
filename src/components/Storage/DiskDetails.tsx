@@ -1,10 +1,19 @@
 'use client';
 
-import { DiskDetail, SmartAttribute } from '@/types/api';
+import type { DiskDetail } from '@/lib/client';
 import { Card, Group, Text, Badge, Stack, SimpleGrid, Table, ThemeIcon, Collapse, Button, Box } from '@mantine/core';
 import { IconDeviceDesktop, IconThermometer, IconClock, IconBolt, IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { formatBytes } from '@/lib/format';
+
+interface SmartAttribute {
+  id: number;
+  name: string;
+  value: number;
+  worst: number;
+  thresh: number;
+  raw: { value: number; string: string };
+}
 
 interface DiskDetailsProps {
   disk: DiskDetail;
@@ -51,7 +60,7 @@ export function DiskDetails({ disk }: DiskDetailsProps) {
                  <IconThermometer size={20} color={disk.smart?.temperature ? 'var(--mantine-color-text)' : 'gray'} />
                  <Text size="sm" c="dimmed">Temperature</Text>
               </Group>
-              <Text fw={700} size="xl" mt="xs" c={getTempColor(disk.smart?.temperature)}>
+              <Text fw={700} size="xl" mt="xs" c={getTempColor(disk.smart?.temperature ?? undefined)}>
                  {disk.smart?.temperature ? `${disk.smart.temperature}°C` : 'N/A'}
               </Text>
            </Card>
@@ -79,7 +88,7 @@ export function DiskDetails({ disk }: DiskDetailsProps) {
       {/* Partitions */}
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Text fw={600} mb="md">Partitions</Text>
-        {disk.partitions.length === 0 ? (
+        {(disk.partitions?.length || 0) === 0 ? (
             <Text c="dimmed" size="sm">No partitions found.</Text>
         ) : (
             <Table>
@@ -92,7 +101,7 @@ export function DiskDetails({ disk }: DiskDetailsProps) {
                     </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                    {disk.partitions.map(part => (
+                    {(disk.partitions || []).map(part => (
                         <Table.Tr key={part.path}>
                             <Table.Td>{part.name}</Table.Td>
                             <Table.Td>{part.mountpoint || '-'}</Table.Td>
@@ -129,7 +138,7 @@ export function DiskDetails({ disk }: DiskDetailsProps) {
                             </Table.Tr>
                         </Table.Thead>
                         <Table.Tbody>
-                            {disk.smart.attributes.map((attr: SmartAttribute) => {
+                            {(disk.smart.attributes as unknown as SmartAttribute[]).map((attr) => {
                                 const isCritical = attr.value <= attr.thresh && attr.thresh !== 0;
                                 return (
                                     <Table.Tr key={attr.id} bg={isCritical ? 'var(--mantine-color-red-1)' : undefined}>

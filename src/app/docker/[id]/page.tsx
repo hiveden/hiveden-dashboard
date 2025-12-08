@@ -3,7 +3,7 @@ import { Container, Title, Group, Text } from '@mantine/core';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { IconArrowLeft } from '@tabler/icons-react';
-import type { DockerContainerInfo } from '@/types/api';
+import type { Container as DockerContainer } from '@/lib/client';
 import { ContainerTabs } from '@/components/Docker/ContainerTabs';
 import { ContainerActions } from '@/components/Docker/ContainerActions';
 
@@ -15,7 +15,7 @@ export default async function ContainerDetailPage({ params }: { params: Promise<
     notFound();
   }
 
-  const container = result.data as DockerContainerInfo;
+  const container = result.data as DockerContainer;
 
   return (
     <Container fluid>

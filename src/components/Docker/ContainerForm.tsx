@@ -19,7 +19,7 @@ import {
 } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { createContainer } from '@/actions/docker';
-import { ContainerCreateRequest, CreateEnvVar, CreatePort, CreateMount } from '@/types/api';
+import type { DBContainerCreate as ContainerCreateRequest, EnvVar as CreateEnvVar, Port as CreatePort, Mount as CreateMount } from '@/lib/client';
 
 export function ContainerForm() {
   const router = useRouter();
@@ -180,7 +180,7 @@ export function ContainerForm() {
                 mt="md"
                 label="Command" 
                 placeholder="/bin/sh -c 'echo hello'" 
-                value={formData.command}
+                value={formData.command || ''}
                 onChange={(e) => handleChange('command', e.target.value)}
             />
         </Paper>

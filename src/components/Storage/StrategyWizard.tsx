@@ -1,6 +1,6 @@
 'use client';
 
-import { StorageStrategy } from '@/types/api';
+import type { StorageStrategy } from '@/lib/client';
 import { formatBytes } from '@/lib/format';
 import { Card, Text, Button, SimpleGrid, Stack, Group, ThemeIcon, Badge } from '@mantine/core';
 import { IconDatabase, IconShieldCheck, IconAlertTriangle } from '@tabler/icons-react';

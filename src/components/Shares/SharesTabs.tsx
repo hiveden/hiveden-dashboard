@@ -4,7 +4,7 @@ import { SegmentedControl, Text, Box } from '@mantine/core';
 import { useState } from 'react';
 import { SMBList } from './SMBList';
 
-export function SharesTabs({ smbShares, zfsPools }: { smbShares: any[], zfsPools: any[] }) {
+export function SharesTabs({ smbShares, zfsPools }: { smbShares: unknown[], zfsPools: unknown[] }) {
   const [activeTab, setActiveTab] = useState('smb');
 
   return (

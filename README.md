@@ -34,3 +34,24 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## API Client Generation
+
+This project uses `openapi-typescript-codegen` to automatically generate the TypeScript client from the backend OpenAPI specification.
+
+To regenerate the client (e.g., after backend changes):
+
+1. Ensure the backend is running at `http://localhost:8000`.
+2. Run the generation script:
+
+```bash
+npm run generate-client
+```
+
+This will update the client in `src/lib/client`.
+
+## Integration Details
+
+- **Client Location**: `src/lib/client` (Auto-generated)
+- **Configuration**: `src/lib/api.ts` (Sets base URL)
+- **Usage**: Server actions in `src/actions` import services directly from `@/lib/client`.

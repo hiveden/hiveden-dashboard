@@ -1,15 +1,16 @@
 import { getRequiredPackages } from '@/actions/packages';
 import { PackageList } from '@/components/Packages/PackageList';
 import { Container, Title, Text, Stack } from '@mantine/core';
+import type { PackageStatus } from '@/lib/client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PackagesPage() {
-  let packages: any[] = [];
+  let packages: PackageStatus[] = [];
 
   try {
     const response = await getRequiredPackages();
-    packages = response.data || [];
+    packages = (response.data as PackageStatus[]) || [];
   } catch (error) {
     console.error('Failed to fetch packages:', error);
   }

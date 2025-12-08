@@ -4,11 +4,11 @@ import { stopContainer, startContainer, removeContainer } from '@/actions/docker
 import { Table, Group, Badge, ActionIcon, Pagination, Stack, Select, Text, Checkbox } from '@mantine/core';
 import { IconTrash, IconPlayerStop, IconPlayerPlay, IconEye, IconCheck, IconX } from '@tabler/icons-react';
 import { useState } from 'react';
-import type { DockerContainerInfo } from '@/types/api';
+import type { Container } from '@/lib/client';
 import Link from 'next/link';
 
 interface DockerListProps {
-  containers: DockerContainerInfo[];
+  containers: Container[];
   selectedRows: Set<string>;
   setSelectedRows: (rows: Set<string>) => void;
 }
@@ -38,7 +38,7 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
   };
 
   // Check if container is managed by Hiveden (has hiveden label)
-  const isManagedByHiveden = (container: DockerContainerInfo): boolean => {
+  const isManagedByHiveden = (container: Container): boolean => {
     return !!(container.Labels && container.Labels['managed-by'] === 'hiveden');
   };
 

@@ -1,12 +1,13 @@
 import { listStorageDevices } from '@/actions/storage';
 import { getRequiredPackages } from '@/actions/packages';
 import { StoragePageContent } from '@/components/Storage/StoragePageContent';
+import type { Disk, PackageStatus } from '@/lib/client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function StoragePage() {
-  let disks: any[] = [];
-  let packages: any[] = [];
+  let disks: Disk[] = [];
+  let packages: PackageStatus[] = [];
 
   try {
     const [disksRes, pkgsRes] = await Promise.all([
@@ -14,8 +15,8 @@ export default async function StoragePage() {
       getRequiredPackages('storage')
     ]);
 
-    disks = disksRes.data || [];
-    packages = pkgsRes.data || [];
+    disks = (disksRes.data as Disk[]) || [];
+    packages = (pkgsRes.data as PackageStatus[]) || [];
   } catch (error) {
     console.error('Failed to fetch storage data:', error);
   }

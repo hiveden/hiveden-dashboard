@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PackageStatus, PackageOperation } from '@/types/api';
+import { PackageStatus, PackageOperation } from '@/lib/client';
 import { Card, Text, Badge, Group, Button, Stack, Modal, ThemeIcon, SimpleGrid, ActionIcon, Tooltip } from '@mantine/core';
 import { IconCheck, IconAlertTriangle, IconDownload, IconTrash, IconTerminal, IconRefresh } from '@tabler/icons-react';
 import { Terminal } from '@/components/Terminal/Terminal';
@@ -99,7 +99,7 @@ function PackageCard({ pkg, onFix }: { pkg: PackageStatus; onFix: () => void }) 
       </Group>
 
       <Group mt="md" gap="xs">
-        {pkg.tags.map(tag => (
+        {(pkg.tags || []).map(tag => (
           <Badge key={tag} size="sm" variant="dot" color="gray">
             {tag}
           </Badge>

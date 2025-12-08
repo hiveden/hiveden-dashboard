@@ -1,6 +1,6 @@
 'use client';
 
-import { Disk } from '@/types/api';
+import type { Disk } from '@/lib/client';
 import { formatBytes } from '@/lib/format';
 import { Card, Text, Group, Badge, Progress, SimpleGrid, Stack, ThemeIcon, Code, UnstyledButton, Divider } from '@mantine/core';
 import { IconDatabase, IconDeviceFloppy, IconServer } from '@tabler/icons-react';
@@ -67,7 +67,7 @@ export function DiskInventory({ disks, onDiskClick }: DiskInventoryProps) {
 
 function DiskCard({ disk, onClick }: { disk: Disk; onClick: () => void }) {
   const totalSize = disk.size;
-  const usedSize = disk.partitions.reduce((acc, part) => acc + part.size, 0);
+  const usedSize = (disk.partitions || []).reduce((acc, part) => acc + part.size, 0);
   const usedPercentage = totalSize > 0 ? (usedSize / totalSize) * 100 : 0;
 
   const Icon = disk.rotational ? IconDatabase : IconDeviceFloppy;
@@ -118,10 +118,10 @@ function DiskCard({ disk, onClick }: { disk: Disk; onClick: () => void }) {
             />
           </Stack>
 
-          {disk.partitions.length > 0 && (
+          {(disk.partitions?.length || 0) > 0 && (
             <Stack gap={4} mt="xs">
               <Text size="xs" c="dimmed" fw={600}>Partitions</Text>
-              {disk.partitions.map(part => (
+              {(disk.partitions || []).map(part => (
                 <Group key={part.path} justify="space-between">
                   <Text size="xs">{part.name}</Text>
                   <Text size="xs" c="dimmed">

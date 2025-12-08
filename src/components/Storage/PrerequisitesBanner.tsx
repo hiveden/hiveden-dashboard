@@ -1,6 +1,6 @@
 'use client';
 
-import { PackageStatus } from '@/types/api';
+import type { PackageStatus } from '@/lib/client';
 import { Alert, Button, Group, List, Text, ThemeIcon } from '@mantine/core';
 import { IconAlertCircle, IconTool } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';

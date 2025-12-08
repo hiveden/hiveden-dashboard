@@ -1,42 +1,37 @@
 'use server';
 
-import { fetchApi } from '@/lib/api';
-import type { DataResponse, StorageStrategy, ApplyStrategyResponse, CreateBtrfsShareRequest } from '@/types/api';
+import '@/lib/api';
+import { StorageService, SharesService, PackagesService } from '@/lib/client';
+import type { DataResponse, StorageStrategy, CreateBtrfsShareRequest } from '@/lib/client';
 
 export async function listStorageDevices(): Promise<DataResponse> {
-  return fetchApi('/storage/devices');
+  return StorageService.listDevicesStorageDevicesGet();
 }
 
 export async function listStorageStrategies(): Promise<DataResponse> {
-  return fetchApi('/storage/strategies');
+  return StorageService.listStrategiesStorageStrategiesGet();
 }
 
 export async function getDiskDetails(deviceName: string): Promise<DataResponse> {
-  return fetchApi(`/storage/devices/${deviceName}`);
+  return StorageService.getDeviceDetailsStorageDevicesDeviceNameGet(deviceName);
 }
 
 export async function listBtrfsVolumes(): Promise<DataResponse> {
-  return fetchApi('/shares/btrfs/volumes');
+  return SharesService.listBtrfsVolumesEndpointSharesBtrfsVolumesGet();
 }
 
 export async function listBtrfsShares(): Promise<DataResponse> {
-  return fetchApi('/shares/btrfs/shares');
+  return SharesService.listBtrfsSharesEndpointSharesBtrfsSharesGet();
 }
 
 export async function createBtrfsShare(data: CreateBtrfsShareRequest): Promise<DataResponse> {
-  return fetchApi('/shares/btrfs/shares', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
+  return SharesService.createBtrfsShareEndpointSharesBtrfsSharesPost(data);
 }
 
-export async function applyStorageStrategy(strategy: StorageStrategy): Promise<DataResponse<ApplyStrategyResponse>> {
-  return fetchApi('/storage/apply', {
-    method: 'POST',
-    body: JSON.stringify(strategy),
-  });
+export async function applyStorageStrategy(strategy: StorageStrategy): Promise<DataResponse> {
+  return StorageService.applyStrategyStorageApplyPost(strategy);
 }
 
 export async function checkRequiredPackages(): Promise<DataResponse> {
-  return fetchApi('/pkgs/required');
+  return PackagesService.listRequiredPackagesPkgsRequiredGet();
 }

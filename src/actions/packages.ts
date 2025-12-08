@@ -1,9 +1,9 @@
 'use server';
 
-import { fetchApi } from '@/lib/api';
-import { DataResponse } from '@/types/api';
+import '@/lib/api';
+import { PackagesService } from '@/lib/client';
+import { DataResponse } from '@/lib/client';
 
 export async function getRequiredPackages(tags?: string): Promise<DataResponse> {
-  const queryString = tags ? `?tags=${tags}` : '';
-  return fetchApi(`/pkgs/required${queryString}`);
+  return PackagesService.listRequiredPackagesPkgsRequiredGet(tags);
 }

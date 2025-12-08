@@ -1,59 +1,54 @@
 'use server';
 
-import { fetchApi } from '@/lib/api';
 import { revalidatePath } from 'next/cache';
-import type { DataResponse, DockerContainer, NetworkCreate, SuccessResponse, ContainerCreateRequest } from '@/types/api';
+import '@/lib/api'; // Ensure client config
+import { DockerService } from '@/lib/client';
+import type { DataResponse, DBContainerCreate, NetworkCreate, SuccessResponse } from '@/lib/client';
 
 export async function listContainers(): Promise<DataResponse> {
-  return fetchApi('/docker/containers');
+  return DockerService.listAllContainersDockerContainersGet();
 }
 
-export async function createContainer(container: ContainerCreateRequest): Promise<DataResponse> {
-  return fetchApi('/docker/containers', {
-    method: 'POST',
-    body: JSON.stringify(container),
-  });
+export async function createContainer(container: DBContainerCreate): Promise<DataResponse> {
+  return DockerService.createNewContainerDockerContainersPost(container);
 }
 
 export async function getContainer(containerId: string): Promise<DataResponse> {
-  return fetchApi(`/docker/containers/${containerId}`);
+  return DockerService.getOneContainerDockerContainersContainerIdGet(containerId);
 }
 
 export async function stopContainer(containerId: string): Promise<DataResponse> {
-  const result = await fetchApi(`/docker/containers/${containerId}/stop`, { method: 'POST' });
+  const result = await DockerService.stopOneContainerDockerContainersContainerIdStopPost(containerId);
   revalidatePath('/docker');
   return result;
 }
 
 export async function startContainer(containerId: string): Promise<DataResponse> {
-  const result = await fetchApi(`/docker/containers/${containerId}/start`, { method: 'POST' });
+  const result = await DockerService.startOneContainerDockerContainersContainerIdStartPost(containerId);
   revalidatePath('/docker');
   return result;
 }
 
 export async function removeContainer(containerId: string): Promise<SuccessResponse> {
-  const result = await fetchApi(`/docker/containers/${containerId}`, { method: 'DELETE' });
+  const result = await DockerService.removeOneContainerDockerContainersContainerIdDelete(containerId);
   revalidatePath('/docker');
   return result;
 }
 
 export async function listNetworks(): Promise<DataResponse> {
-  return fetchApi('/docker/networks');
+  return DockerService.listAllNetworksDockerNetworksGet();
 }
 
 export async function createNetwork(network: NetworkCreate): Promise<DataResponse> {
-  return fetchApi('/docker/networks', {
-    method: 'POST',
-    body: JSON.stringify(network),
-  });
+  return DockerService.createNewNetworkDockerNetworksPost(network);
 }
 
 export async function getNetwork(networkId: string): Promise<DataResponse> {
-  return fetchApi(`/docker/networks/${networkId}`);
+  return DockerService.getOneNetworkDockerNetworksNetworkIdGet(networkId);
 }
 
 export async function removeNetwork(networkId: string): Promise<SuccessResponse> {
-  const result = await fetchApi(`/docker/networks/${networkId}`, { method: 'DELETE' });
+  const result = await DockerService.removeOneNetworkDockerNetworksNetworkIdDelete(networkId);
   revalidatePath('/docker');
   return result;
 }

@@ -4,11 +4,11 @@ import { Container, Title, Group, Collapse, Button } from '@mantine/core';
 import { DockerList } from './DockerList';
 import { ContainerActions } from './ContainerActions';
 import { useState } from 'react';
-import type { DockerContainerInfo } from '@/types/api';
+import type { Container as DockerContainer } from '@/lib/client';
 import Link from 'next/link';
 import { IconPlus } from '@tabler/icons-react';
 
-export function DockerPageContent({ containers }: { containers: DockerContainerInfo[] }) {
+export function DockerPageContent({ containers }: { containers: DockerContainer[] }) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
   // Get first selected container's state for bulk actions

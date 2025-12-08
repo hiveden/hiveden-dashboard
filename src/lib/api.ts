@@ -1,4 +1,9 @@
+import { OpenAPI } from './client';
+
 const API_BASE_URL = 'http://localhost:8000';
+
+// Configure generated client
+OpenAPI.BASE = API_BASE_URL;
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
