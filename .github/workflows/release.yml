@@ -11,6 +11,8 @@ on:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v4
       with:
@@ -34,13 +36,16 @@ jobs:
         if [[ "${{ github.event_name }}" == "release" ]]; then
           echo "APP_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "VERSION_NO_V=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+        elif [[ "${{ github.event_name }}" == "push" ]]; then
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "APP_VERSION=v0.0.0-${SHORT_SHA}" >> $GITHUB_ENV
+          echo "VERSION_NO_V=0.0.0-${SHORT_SHA}" >> $GITHUB_ENV
         else
           echo "APP_VERSION=test" >> $GITHUB_ENV
           echo "VERSION_NO_V=0.0.0-test" >> $GITHUB_ENV
         fi
 
     - name: Update package.json version
-      if: github.event_name == 'release'
       run: |
         npm version ${{ env.VERSION_NO_V }} --no-git-tag-version
 
@@ -51,17 +56,14 @@ jobs:
 
     # Packaging Steps (Only on Release)
     - name: Setup Ruby (for FPM)
-      if: github.event_name == 'release'
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: '3.0'
 
     - name: Install FPM
-      if: github.event_name == 'release'
       run: gem install fpm
 
     - name: Prepare Staging Area
-      if: github.event_name == 'release'
       run: |
         mkdir -p staging/opt/hiveden-dashboard
         mkdir -p staging/usr/lib/systemd/system
@@ -78,7 +80,6 @@ jobs:
         cp hiveden-dashboard.service staging/usr/lib/systemd/system/
 
     - name: Build Debian Package (.deb)
-      if: github.event_name == 'release'
       run: |
         fpm -s dir -t deb \
           -n hiveden-dashboard \
@@ -90,7 +91,6 @@ jobs:
           -C staging .
 
     - name: Build Fedora Package (.rpm)
-      if: github.event_name == 'release'
       run: |
         fpm -s dir -t rpm \
           -n hiveden-dashboard \
@@ -102,7 +102,6 @@ jobs:
           -C staging .
 
     - name: Build Arch Linux Package (.pkg.tar.zst)
-      if: github.event_name == 'release'
       run: |
         fpm -s dir -t pacman \
           -n hiveden-dashboard \
@@ -116,13 +115,19 @@ jobs:
         # FPM usually creates .pkg.tar.xz or .pkg.tar, rename if necessary to match standard conventions if needed
         # But uploading whatever FPM produces is fine.
 
-    - name: Upload Release Assets
-      if: github.event_name == 'release'
-      uses: softprops/action-gh-release@v1
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        files: |
-          *.deb
-          *.rpm
-          *.pkg.tar.zst
-          *.pkg.tar.xz
-          *.pkg.tar
+        tag_name: ${{ env.APP_VERSION }}
+        release_name: Release ${{ env.APP_VERSION }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Assets
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh release upload ${{ env.APP_VERSION }} *.deb *.rpm *.pkg.tar.zst --clobber
