@@ -1,11 +1,12 @@
 'use client';
 
 import { startLxcContainer, stopLxcContainer, deleteLxcContainer } from '@/actions/lxc';
+import { LXCContainer, LXCContainerCreate } from '@/lib/client';
 import { Button, Table, Group, Badge, ActionIcon } from '@mantine/core';
 import { IconTrash, IconPlayerPlay, IconPlayerStop } from '@tabler/icons-react';
 import { useState } from 'react';
 
-export function LXCList({ containers }: { containers: any[] }) {
+export function LXCList({ containers }: { containers: LXCContainer[] }) {
   const [loading, setLoading] = useState<string | null>(null);
 
   const handleStart = async (name: string) => {

@@ -15,8 +15,8 @@ export default function ConfigPage() {
     try {
       await submitConfig(config);
       setStatus({ type: 'success', message: 'Configuration submitted successfully' });
-    } catch (error: any) {
-      setStatus({ type: 'error', message: error.message });
+    } catch (error) {
+      setStatus({ type: 'error', message: (error as Error).message });
     } finally {
       setLoading(false);
     }

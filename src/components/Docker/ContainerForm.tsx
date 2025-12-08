@@ -19,7 +19,7 @@ import {
 } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { createContainer } from '@/actions/docker';
-import type { DBContainerCreate as ContainerCreateRequest, EnvVar as CreateEnvVar, Port as CreatePort, Mount as CreateMount } from '@/lib/client';
+import { ContainerCreateRequest, CreateEnvVar, CreatePort, CreateMount } from '@/types/api';
 
 export function ContainerForm() {
   const router = useRouter();
@@ -39,7 +39,7 @@ export function ContainerForm() {
   });
 
   // Helper to update simple fields
-  const handleChange = (field: keyof ContainerCreateRequest, value: any) => {
+  const handleChange = (field: keyof ContainerCreateRequest, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -68,7 +68,7 @@ export function ContainerForm() {
     setFormData(prev => ({ ...prev, ports: (prev.ports || []).filter((_, i) => i !== index) }));
   };
 
-  const updatePort = (index: number, field: keyof CreatePort, value: any) => {
+  const updatePort = (index: number, field: keyof CreatePort, value: unknown) => {
     setFormData(prev => {
       const newPorts = [...(prev.ports || [])];
       newPorts[index] = { ...newPorts[index], [field]: value };
@@ -84,7 +84,7 @@ export function ContainerForm() {
     setFormData(prev => ({ ...prev, mounts: (prev.mounts || []).filter((_, i) => i !== index) }));
   };
 
-  const updateMount = (index: number, field: keyof CreateMount, value: any) => {
+  const updateMount = (index: number, field: keyof CreateMount, value: unknown) => {
     setFormData(prev => {
       const newMounts = [...(prev.mounts || [])];
       newMounts[index] = { ...newMounts[index], [field]: value };
@@ -137,8 +137,8 @@ export function ContainerForm() {
           alert(`Error: ${response.message}`);
       }
 
-    } catch (error: any) {
-      alert(`Failed to create container: ${error.message}`);
+    } catch (error) {
+      alert(`Failed to create container: ${(error as Error).message}`);
     } finally {
       setLoading(false);
     }
@@ -180,7 +180,7 @@ export function ContainerForm() {
                 mt="md"
                 label="Command" 
                 placeholder="/bin/sh -c 'echo hello'" 
-                value={formData.command || ''}
+                value={formData.command}
                 onChange={(e) => handleChange('command', e.target.value)}
             />
         </Paper>

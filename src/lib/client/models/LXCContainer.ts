@@ -5,7 +5,9 @@
 export type LXCContainer = {
     name: string;
     state: string;
+    status: string;
     pid: number;
     ips: Array<string>;
+    ipv4: Array<string>;
 };
 
