@@ -3,14 +3,25 @@
 import { revalidatePath } from 'next/cache';
 import '@/lib/api'; // Ensure client config
 import { DockerService } from '@/lib/client';
-import type { DataResponse, DBContainerCreate, NetworkCreate, SuccessResponse } from '@/lib/client';
+import type { 
+  DataResponse, 
+  ContainerCreate, 
+  NetworkCreate, 
+  SuccessResponse,
+  TemplateCreate,
+  TemplateResponse
+} from '@/lib/client';
 
 export async function listContainers(): Promise<DataResponse> {
   return DockerService.listAllContainersDockerContainersGet();
 }
 
-export async function createContainer(container: DBContainerCreate): Promise<DataResponse> {
+export async function createContainer(container: ContainerCreate): Promise<DataResponse> {
   return DockerService.createNewContainerDockerContainersPost(container);
+}
+
+export async function createTemplate(template: TemplateCreate): Promise<TemplateResponse> {
+  return DockerService.createTemplateDockerContainersTemplatePost(template);
 }
 
 export async function getContainer(containerId: string): Promise<DataResponse> {

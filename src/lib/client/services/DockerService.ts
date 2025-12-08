@@ -2,20 +2,45 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { DataResponse } from '../models/DataResponse';
-import type { DBContainerCreate } from '../models/DBContainerCreate';
+import type { ContainerCreate } from '../models/ContainerCreate';
+import type { ContainerCreateResponse } from '../models/ContainerCreateResponse';
+import type { ContainerListResponse } from '../models/ContainerListResponse';
+import type { ContainerResponse } from '../models/ContainerResponse';
 import type { NetworkCreate } from '../models/NetworkCreate';
+import type { NetworkListResponse } from '../models/NetworkListResponse';
+import type { NetworkResponse } from '../models/NetworkResponse';
 import type { SuccessResponse } from '../models/SuccessResponse';
+import type { TemplateCreate } from '../models/TemplateCreate';
+import type { TemplateResponse } from '../models/TemplateResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class DockerService {
     /**
-     * List All Containers
-     * @returns DataResponse Successful Response
+     * Create Template
+     * @param requestBody
+     * @returns TemplateResponse Successful Response
      * @throws ApiError
      */
-    public static listAllContainersDockerContainersGet(): CancelablePromise<DataResponse> {
+    public static createTemplateDockerContainersTemplatePost(
+        requestBody: TemplateCreate,
+    ): CancelablePromise<TemplateResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/docker/containers/template',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * List All Containers
+     * @returns ContainerListResponse Successful Response
+     * @throws ApiError
+     */
+    public static listAllContainersDockerContainersGet(): CancelablePromise<ContainerListResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/docker/containers',
@@ -24,12 +49,12 @@ export class DockerService {
     /**
      * Create New Container
      * @param requestBody
-     * @returns DataResponse Successful Response
+     * @returns ContainerCreateResponse Successful Response
      * @throws ApiError
      */
     public static createNewContainerDockerContainersPost(
-        requestBody: DBContainerCreate,
-    ): CancelablePromise<DataResponse> {
+        requestBody: ContainerCreate,
+    ): CancelablePromise<ContainerCreateResponse> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/docker/containers',
@@ -43,12 +68,12 @@ export class DockerService {
     /**
      * Get One Container
      * @param containerId
-     * @returns DataResponse Successful Response
+     * @returns ContainerResponse Successful Response
      * @throws ApiError
      */
     public static getOneContainerDockerContainersContainerIdGet(
         containerId: string,
-    ): CancelablePromise<DataResponse> {
+    ): CancelablePromise<ContainerResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/docker/containers/{container_id}',
@@ -83,12 +108,12 @@ export class DockerService {
     /**
      * Start One Container
      * @param containerId
-     * @returns DataResponse Successful Response
+     * @returns ContainerResponse Successful Response
      * @throws ApiError
      */
     public static startOneContainerDockerContainersContainerIdStartPost(
         containerId: string,
-    ): CancelablePromise<DataResponse> {
+    ): CancelablePromise<ContainerResponse> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/docker/containers/{container_id}/start',
@@ -103,12 +128,12 @@ export class DockerService {
     /**
      * Stop One Container
      * @param containerId
-     * @returns DataResponse Successful Response
+     * @returns ContainerResponse Successful Response
      * @throws ApiError
      */
     public static stopOneContainerDockerContainersContainerIdStopPost(
         containerId: string,
-    ): CancelablePromise<DataResponse> {
+    ): CancelablePromise<ContainerResponse> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/docker/containers/{container_id}/stop',
@@ -123,12 +148,10 @@ export class DockerService {
     /**
      * Stream Container Logs
      * Stream container logs in real-time using Server-Sent Events.
-     *
      * Args:
      * container_id: Container ID or name
      * follow: If True, stream logs in real-time (default: True)
      * tail: Number of lines to show from the end (default: 100)
-     *
      * Returns:
      * StreamingResponse with text/event-stream content type
      * @param containerId
@@ -159,10 +182,10 @@ export class DockerService {
     }
     /**
      * List All Networks
-     * @returns DataResponse Successful Response
+     * @returns NetworkListResponse Successful Response
      * @throws ApiError
      */
-    public static listAllNetworksDockerNetworksGet(): CancelablePromise<DataResponse> {
+    public static listAllNetworksDockerNetworksGet(): CancelablePromise<NetworkListResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/docker/networks',
@@ -171,12 +194,12 @@ export class DockerService {
     /**
      * Create New Network
      * @param requestBody
-     * @returns DataResponse Successful Response
+     * @returns NetworkResponse Successful Response
      * @throws ApiError
      */
     public static createNewNetworkDockerNetworksPost(
         requestBody: NetworkCreate,
-    ): CancelablePromise<DataResponse> {
+    ): CancelablePromise<NetworkResponse> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/docker/networks',
@@ -190,12 +213,12 @@ export class DockerService {
     /**
      * Get One Network
      * @param networkId
-     * @returns DataResponse Successful Response
+     * @returns NetworkResponse Successful Response
      * @throws ApiError
      */
     public static getOneNetworkDockerNetworksNetworkIdGet(
         networkId: string,
-    ): CancelablePromise<DataResponse> {
+    ): CancelablePromise<NetworkResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/docker/networks/{network_id}',

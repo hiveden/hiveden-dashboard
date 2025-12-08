@@ -7,9 +7,7 @@ import {
   Button, 
   Group, 
   Box, 
-  Text, 
   Stack, 
-  Switch, 
   ActionIcon, 
   NumberInput, 
   Select, 
@@ -18,14 +16,18 @@ import {
   LoadingOverlay
 } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
-import { createContainer } from '@/actions/docker';
-import { ContainerCreateRequest, CreateEnvVar, CreatePort, CreateMount } from '@/types/api';
+import { createContainer, createTemplate } from '@/actions/docker';
+import { ContainerCreate, TemplateCreate, EnvVar, Port, Mount } from '@/lib/client';
 
 export function ContainerForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   
-  const [formData, setFormData] = useState<ContainerCreateRequest>({
+  // We use ContainerCreate as the base type for form state, 
+  // but we'll manage command/env/ports/mounts slightly differently for UI inputs if needed
+  // and construct the final payload on submit.
+  // Note: is_container and type are not part of the form state anymore.
+  const [formData, setFormData] = useState<ContainerCreate>({
     name: '',
     image: '',
     command: '',
@@ -33,13 +35,11 @@ export function ContainerForm() {
     ports: [],
     mounts: [],
     labels: {},
-    is_container: true,
     enabled: true,
-    type: 'docker'
   });
 
   // Helper to update simple fields
-  const handleChange = (field: keyof ContainerCreateRequest, value: unknown) => {
+  const handleChange = (field: keyof ContainerCreate, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -52,7 +52,7 @@ export function ContainerForm() {
     setFormData(prev => ({ ...prev, env: (prev.env || []).filter((_, i) => i !== index) }));
   };
 
-  const updateEnv = (index: number, field: keyof CreateEnvVar, value: string) => {
+  const updateEnv = (index: number, field: keyof EnvVar, value: string) => {
     setFormData(prev => {
       const newEnv = [...(prev.env || [])];
       newEnv[index] = { ...newEnv[index], [field]: value };
@@ -68,7 +68,7 @@ export function ContainerForm() {
     setFormData(prev => ({ ...prev, ports: (prev.ports || []).filter((_, i) => i !== index) }));
   };
 
-  const updatePort = (index: number, field: keyof CreatePort, value: unknown) => {
+  const updatePort = (index: number, field: keyof Port, value: unknown) => {
     setFormData(prev => {
       const newPorts = [...(prev.ports || [])];
       newPorts[index] = { ...newPorts[index], [field]: value };
@@ -84,7 +84,7 @@ export function ContainerForm() {
     setFormData(prev => ({ ...prev, mounts: (prev.mounts || []).filter((_, i) => i !== index) }));
   };
 
-  const updateMount = (index: number, field: keyof CreateMount, value: unknown) => {
+  const updateMount = (index: number, field: keyof Mount, value: unknown) => {
     setFormData(prev => {
       const newMounts = [...(prev.mounts || [])];
       newMounts[index] = { ...newMounts[index], [field]: value };
@@ -93,7 +93,6 @@ export function ContainerForm() {
   };
 
   // Handle Labels separately since it's a Record<string, string>
-  // We'll manage it as an array of objects locally for the UI
   const [labelsList, setLabelsList] = useState<{ key: string; value: string }[]>([]);
 
   const addLabel = () => {
@@ -112,7 +111,7 @@ export function ContainerForm() {
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (mode: 'container' | 'template') => {
     setLoading(true);
     try {
       // Convert labelsList back to Record
@@ -121,24 +120,36 @@ export function ContainerForm() {
         if (l.key) labelsRecord[l.key] = l.value;
       });
 
-      const payload = { ...formData, labels: labelsRecord };
+      const commonData = { ...formData, labels: labelsRecord };
       
-      const response = await createContainer(payload);
-      
-      // Currently actions return { status: 'success' | 'error', ... }
-      // If the response is generic DataResponse, we check status if possible, 
-      // or rely on fetchApi throwing errors (which it does in lib/api.ts if !ok).
-      // However, fetchApi returns json(). If backend returns 200 but status: error, we handle it.
-      
-      if (response.status === 'success' || !response.status) {
-          // Assuming success if no status or status success
-           router.push('/docker');
+      if (mode === 'container') {
+        const payload: ContainerCreate = {
+          ...commonData,
+          is_container: true,
+          // type is not strictly needed if backend defaults, but let's leave it undefined or set it if needed
+          // The previous code set type: 'docker', but the new requirements imply specific handling.
+          // We'll rely on is_container=true
+        };
+        await createContainer(payload);
       } else {
-          alert(`Error: ${response.message}`);
+        const payload: TemplateCreate = {
+          ...commonData,
+          is_container: false,
+          type: 'template'
+        };
+        await createTemplate(payload);
       }
+      
+      // Check response status if applicable
+      // The generated client returns the response body directly. 
+      // If it failed, it likely threw an error (handled in catch).
+      // Assuming success if we reach here.
+      
+      router.push('/docker');
+      router.refresh(); // Ensure the list updates
 
     } catch (error) {
-      alert(`Failed to create container: ${(error as Error).message}`);
+      alert(`Failed to ${mode === 'container' ? 'create container' : 'save template'}: ${(error as Error).message}`);
     } finally {
       setLoading(false);
     }
@@ -152,13 +163,7 @@ export function ContainerForm() {
         <Paper p="md" withBorder radius="md">
             <Group justify="space-between" mb="md">
                 <Title order={4}>General Configuration</Title>
-                <Switch 
-                    label={formData.is_container ? "Action: Run Container" : "Action: Save Template Only"} 
-                    checked={formData.is_container}
-                    onChange={(event) => handleChange('is_container', event.currentTarget.checked)}
-                    size="md"
-                    color="blue"
-                />
+                {/* Switch removed as per requirements */}
             </Group>
             <SimpleGridWrapper>
                 <TextInput 
@@ -180,7 +185,7 @@ export function ContainerForm() {
                 mt="md"
                 label="Command" 
                 placeholder="/bin/sh -c 'echo hello'" 
-                value={formData.command}
+                value={formData.command || ''}
                 onChange={(e) => handleChange('command', e.target.value)}
             />
         </Paper>
@@ -305,8 +310,11 @@ export function ContainerForm() {
 
         <Group justify="flex-end" mt="xl">
              <Button variant="default" onClick={() => router.back()}>Cancel</Button>
-             <Button onClick={handleSubmit} loading={loading}>
-                 {formData.is_container ? 'Deploy Container' : 'Save Template'}
+             <Button variant="outline" onClick={() => handleSubmit('template')} loading={loading}>
+                 Save Template
+             </Button>
+             <Button onClick={() => handleSubmit('container')} loading={loading}>
+                 Deploy Container
              </Button>
         </Group>
 
