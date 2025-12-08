@@ -7,6 +7,8 @@ import type { Container as DockerContainer } from '@/lib/client';
 import { ContainerTabs } from '@/components/Docker/ContainerTabs';
 import { ContainerActions } from '@/components/Docker/ContainerActions';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ContainerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const result = await getContainer(id);

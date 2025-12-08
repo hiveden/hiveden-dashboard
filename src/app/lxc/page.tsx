@@ -3,6 +3,8 @@ import { LXCList } from '@/components/LXC/LXCList';
 import { Container, Title } from '@mantine/core';
 import type { LXCContainer } from '@/lib/client';
 
+export const dynamic = 'force-dynamic';
+
 export default async function LXCPage() {
   const containers = await listLxcContainers();
 

@@ -2,6 +2,8 @@ import { getHwInfo, getOsInfo } from '@/actions/info';
 import { Card, Container, SimpleGrid, Text, Title, Group, ThemeIcon } from '@mantine/core';
 import { IconCpu, IconDeviceDesktop } from '@tabler/icons-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const [osInfo, hwInfo] = await Promise.all([getOsInfo(), getHwInfo()]);
 

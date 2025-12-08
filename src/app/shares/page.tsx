@@ -3,6 +3,8 @@ import { SharesTabs } from '@/components/Shares/SharesTabs';
 import { Container, Title } from '@mantine/core';
 import type { SMBShare, ZFSPool } from '@/lib/client';
 
+export const dynamic = 'force-dynamic';
+
 export default async function SharesPage() {
   const [smbShares, zfsPools] = await Promise.all([
     listSmbShares(),
