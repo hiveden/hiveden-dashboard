@@ -101,6 +101,7 @@ export class DockerService {
                 'container_id': containerId,
             },
             errors: {
+                400: `Bad Request: Container is running or other client-side error.`,
                 422: `Validation Error`,
             },
         });

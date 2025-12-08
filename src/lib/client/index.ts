@@ -21,6 +21,7 @@ export type { Disk } from './models/Disk';
 export type { DiskDetail } from './models/DiskDetail';
 export type { DockerContainer } from './models/DockerContainer';
 export type { EnvVar } from './models/EnvVar';
+export type { ErrorResponse } from './models/ErrorResponse';
 export type { HostConfig } from './models/HostConfig';
 export type { HTTPValidationError } from './models/HTTPValidationError';
 export type { HWInfo } from './models/HWInfo';

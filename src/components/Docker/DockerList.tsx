@@ -6,6 +6,7 @@ import { IconTrash, IconPlayerStop, IconPlayerPlay, IconEye, IconCheck, IconX } 
 import { useState } from 'react';
 import type { Container } from '@/lib/client';
 import Link from 'next/link';
+import { notifications } from '@mantine/notifications';
 
 interface DockerListProps {
   containers: Container[];
@@ -20,21 +21,63 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
 
   const handleStart = async (id: string) => {
     setLoading(id);
-    await startContainer(id);
-    setLoading(null);
+    try {
+      await startContainer(id);
+      notifications.show({
+        title: 'Container started',
+        message: 'The container has been started successfully',
+        color: 'green',
+      });
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'Failed to start container',
+        color: 'red',
+      });
+    } finally {
+      setLoading(null);
+    }
   };
 
   const handleStop = async (id: string) => {
     setLoading(id);
-    await stopContainer(id);
-    setLoading(null);
+    try {
+      await stopContainer(id);
+      notifications.show({
+        title: 'Container stopped',
+        message: 'The container has been stopped successfully',
+        color: 'green',
+      });
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'Failed to stop container',
+        color: 'red',
+      });
+    } finally {
+      setLoading(null);
+    }
   };
 
   const handleRemove = async (id: string) => {
     if (!confirm('Are you sure?')) return;
     setLoading(id);
-    await removeContainer(id);
-    setLoading(null);
+    try {
+      await removeContainer(id);
+      notifications.show({
+        title: 'Container deleted',
+        message: 'The container has been deleted successfully',
+        color: 'green',
+      });
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'Failed to delete container',
+        color: 'red',
+      });
+    } finally {
+      setLoading(null);
+    }
   };
 
   // Check if container is managed by Hiveden (has hiveden label)

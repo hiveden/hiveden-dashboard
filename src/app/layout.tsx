@@ -1,5 +1,7 @@
 import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
 import { ColorSchemeScript, MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import { Shell } from '@/components/Layout/Shell';
 
 export const metadata = {
@@ -19,6 +21,7 @@ export default function RootLayout({
       </head>
       <body>
         <MantineProvider defaultColorScheme="auto">
+          <Notifications />
           <Shell>{children}</Shell>
         </MantineProvider>
       </body>

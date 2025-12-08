@@ -5,6 +5,7 @@ import { IconPlayerPlay, IconPlayerStop, IconRefresh, IconTrash } from '@tabler/
 import { useState } from 'react';
 import { stopContainer, startContainer, removeContainer } from '@/actions/docker';
 import { useRouter } from 'next/navigation';
+import { notifications } from '@mantine/notifications';
 
 export function ContainerActions({ containerId, containerState }: { containerId: string, containerState: string }) {
   const [loading, setLoading] = useState<string | null>(null);
@@ -12,16 +13,44 @@ export function ContainerActions({ containerId, containerState }: { containerId:
 
   const handleStart = async () => {
     setLoading('start');
-    await startContainer(containerId);
-    setLoading(null);
-    router.refresh();
+    try {
+      await startContainer(containerId);
+      notifications.show({
+        title: 'Container started',
+        message: 'The container has been started successfully',
+        color: 'green',
+      });
+      router.refresh();
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'Failed to start container',
+        color: 'red',
+      });
+    } finally {
+      setLoading(null);
+    }
   };
 
   const handleStop = async () => {
     setLoading('stop');
-    await stopContainer(containerId);
-    setLoading(null);
-    router.refresh();
+    try {
+      await stopContainer(containerId);
+      notifications.show({
+        title: 'Container stopped',
+        message: 'The container has been stopped successfully',
+        color: 'green',
+      });
+      router.refresh();
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'Failed to stop container',
+        color: 'red',
+      });
+    } finally {
+      setLoading(null);
+    }
   };
 
   const handleRestart = async () => {
@@ -33,9 +62,23 @@ export function ContainerActions({ containerId, containerState }: { containerId:
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this container?')) return;
     setLoading('delete');
-    await removeContainer(containerId);
-    setLoading(null);
-    router.push('/docker');
+    try {
+      await removeContainer(containerId);
+      notifications.show({
+        title: 'Container deleted',
+        message: 'The container has been deleted successfully',
+        color: 'green',
+      });
+      router.push('/docker');
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'Failed to delete container',
+        color: 'red',
+      });
+    } finally {
+      setLoading(null);
+    }
   };
 
   const isRunning = containerState === 'running';
