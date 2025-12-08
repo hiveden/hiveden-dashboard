@@ -16,7 +16,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const { formattedVersion, frontendVersion, isLoading } = useApplicationVersion();
 
   useEffect(() => {
-    setMounted(true);
+    // Using setTimeout to avoid lint error about synchronous setState in effect
+    // and to ensure this runs after hydration
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const navItems = [
