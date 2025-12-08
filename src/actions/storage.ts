@@ -2,17 +2,25 @@
 
 import '@/lib/api';
 import { StorageService, SharesService, PackagesService } from '@/lib/client';
-import type { DataResponse, StorageStrategy, CreateBtrfsShareRequest } from '@/lib/client';
+import type { 
+  DataResponse, 
+  StorageStrategy, 
+  CreateBtrfsShareRequest,
+  DiskListResponse,
+  DiskDetailResponse,
+  StorageStrategyListResponse,
+  StorageStrategyApplyResponse
+} from '@/lib/client';
 
-export async function listStorageDevices(): Promise<DataResponse> {
+export async function listStorageDevices(): Promise<DiskListResponse> {
   return StorageService.listDevicesStorageDevicesGet();
 }
 
-export async function listStorageStrategies(): Promise<DataResponse> {
+export async function listStorageStrategies(): Promise<StorageStrategyListResponse> {
   return StorageService.listStrategiesStorageStrategiesGet();
 }
 
-export async function getDiskDetails(deviceName: string): Promise<DataResponse> {
+export async function getDiskDetails(deviceName: string): Promise<DiskDetailResponse> {
   return StorageService.getDeviceDetailsStorageDevicesDeviceNameGet(deviceName);
 }
 
@@ -28,7 +36,7 @@ export async function createBtrfsShare(data: CreateBtrfsShareRequest): Promise<D
   return SharesService.createBtrfsShareEndpointSharesBtrfsSharesPost(data);
 }
 
-export async function applyStorageStrategy(strategy: StorageStrategy): Promise<DataResponse> {
+export async function applyStorageStrategy(strategy: StorageStrategy): Promise<StorageStrategyApplyResponse> {
   return StorageService.applyStrategyStorageApplyPost(strategy);
 }
 

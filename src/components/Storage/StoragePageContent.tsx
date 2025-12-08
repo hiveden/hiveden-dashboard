@@ -54,7 +54,7 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
     try {
       const response = await listStorageDevices();
       if (response.data) {
-        setDisks(response.data as Disk[]);
+        setDisks(response.data);
       }
     } catch (error) {
       console.error('Failed to refresh disks:', error);
@@ -94,7 +94,7 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
     try {
       const response = await listStorageStrategies();
       if (response.data) {
-        setStrategies(response.data as StorageStrategy[]);
+        setStrategies(response.data);
       }
     } catch (error) {
       console.error('Failed to fetch strategies:', error);
@@ -116,7 +116,7 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
     
     try {
       const response = await applyStorageStrategy(selectedStrategy);
-      const data = response.data as any;
+      const data = response.data; // Now typed as JobInfo
       if (data && data.job_id) {
         setJobId(data.job_id);
         setIsTerminalOpen(true);
@@ -137,7 +137,7 @@ export function StoragePageContent({ initialDisks, initialPackages }: StoragePag
       const deviceName = disk.name; 
       const response = await getDiskDetails(deviceName);
       if (response.data) {
-        setSelectedDiskDetail(response.data as DiskDetail);
+        setSelectedDiskDetail(response.data);
       }
     } catch (error) {
       console.error('Failed to fetch disk details:', error);

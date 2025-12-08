@@ -2,8 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { DataResponse } from '../models/DataResponse';
+import type { DiskDetailResponse } from '../models/DiskDetailResponse';
+import type { DiskListResponse } from '../models/DiskListResponse';
 import type { StorageStrategy } from '../models/StorageStrategy';
+import type { StorageStrategyApplyResponse } from '../models/StorageStrategyApplyResponse';
+import type { StorageStrategyListResponse } from '../models/StorageStrategyListResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -11,25 +14,28 @@ export class StorageService {
     /**
      * List Devices
      * List all block devices on the system.
-     * @returns DataResponse Successful Response
+     * @returns DiskListResponse Successful Response
      * @throws ApiError
      */
-    public static listDevicesStorageDevicesGet(): CancelablePromise<DataResponse> {
+    public static listDevicesStorageDevicesGet(): CancelablePromise<DiskListResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/storage/devices',
+            errors: {
+                500: `Internal Server Error`,
+            },
         });
     }
     /**
      * Get Device Details
      * Get detailed information for a specific disk (including SMART data).
      * @param deviceName
-     * @returns DataResponse Successful Response
+     * @returns DiskDetailResponse Successful Response
      * @throws ApiError
      */
     public static getDeviceDetailsStorageDevicesDeviceNameGet(
         deviceName: string,
-    ): CancelablePromise<DataResponse> {
+    ): CancelablePromise<DiskDetailResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/storage/devices/{device_name}',
@@ -37,32 +43,37 @@ export class StorageService {
                 'device_name': deviceName,
             },
             errors: {
+                404: `Device not found`,
                 422: `Validation Error`,
+                500: `Internal Server Error`,
             },
         });
     }
     /**
      * List Strategies
      * Suggests storage configuration strategies based on currently unused disks.
-     * @returns DataResponse Successful Response
+     * @returns StorageStrategyListResponse Successful Response
      * @throws ApiError
      */
-    public static listStrategiesStorageStrategiesGet(): CancelablePromise<DataResponse> {
+    public static listStrategiesStorageStrategiesGet(): CancelablePromise<StorageStrategyListResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/storage/strategies',
+            errors: {
+                500: `Internal Server Error`,
+            },
         });
     }
     /**
      * Apply Strategy
      * Applies a storage strategy. Starts a background job.
      * @param requestBody
-     * @returns DataResponse Successful Response
+     * @returns StorageStrategyApplyResponse Successful Response
      * @throws ApiError
      */
     public static applyStrategyStorageApplyPost(
         requestBody: StorageStrategy,
-    ): CancelablePromise<DataResponse> {
+    ): CancelablePromise<StorageStrategyApplyResponse> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/storage/apply',
@@ -70,6 +81,7 @@ export class StorageService {
             mediaType: 'application/json',
             errors: {
                 422: `Validation Error`,
+                500: `Internal Server Error`,
             },
         });
     }

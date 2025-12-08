@@ -15,7 +15,7 @@ export default async function StoragePage() {
       getRequiredPackages('storage')
     ]);
 
-    disks = (disksRes.data as Disk[]) || [];
+    disks = disksRes.data || [];
     packages = (pkgsRes.data as PackageStatus[]) || [];
   } catch (error) {
     console.error('Failed to fetch storage data:', error);
