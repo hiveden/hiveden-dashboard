@@ -77,7 +77,6 @@ jobs:
 
           # Copy static assets (required for standalone)
           cp -r public staging/opt/hiveden-dashboard/public
-          # mkdir -p staging/opt/hiveden-dashboard/.next
           cp -r .next/static/. staging/opt/hiveden-dashboard/.next
 
           # Copy service file
