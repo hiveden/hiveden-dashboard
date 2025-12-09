@@ -70,7 +70,7 @@ jobs:
           mkdir -p staging/usr/lib/systemd/system
 
           # Copy standalone build
-          cp -r .next/standalone/* staging/opt/hiveden-dashboard/
+          cp -rT .next/standalone staging/opt/hiveden-dashboard
 
           # Copy static assets (required for standalone)
           cp -r public staging/opt/hiveden-dashboard/public
