@@ -2,11 +2,12 @@ name: Build and Release
 
 on:
   push:
-    branches: [ "main" ]
+    tags:
+      - "*.*.*"
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   release:
-    types: [ published ]
+    types: [published]
 
 jobs:
   build-and-release:
@@ -14,133 +15,133 @@ jobs:
     permissions:
       contents: write
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Use Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    # - name: Lint
-    #   run: npm run lint
+      # - name: Lint
+      #   run: npm run lint
 
-    - name: Set Version Env
-      id: vars
-      run: |
-        if [[ "${{ github.event_name }}" == "release" ]]; then
-          echo "APP_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-          echo "VERSION_NO_V=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
-        elif [[ "${{ github.event_name }}" == "push" ]]; then
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          echo "APP_VERSION=v0.0.0-${SHORT_SHA}" >> $GITHUB_ENV
-          echo "VERSION_NO_V=0.0.0-${SHORT_SHA}" >> $GITHUB_ENV
-        else
-          echo "APP_VERSION=test" >> $GITHUB_ENV
-          echo "VERSION_NO_V=0.0.0-test" >> $GITHUB_ENV
-        fi
+      - name: Set Version Env
+        id: vars
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "APP_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+            echo "VERSION_NO_V=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+            echo "APP_VERSION=v0.0.0-${SHORT_SHA}" >> $GITHUB_ENV
+            echo "VERSION_NO_V=0.0.0-${SHORT_SHA}" >> $GITHUB_ENV
+          else
+            echo "APP_VERSION=test" >> $GITHUB_ENV
+            echo "VERSION_NO_V=0.0.0-test" >> $GITHUB_ENV
+          fi
 
-    - name: Update package.json version
-      run: |
-        npm version ${{ env.VERSION_NO_V }} --no-git-tag-version
+      - name: Update package.json version
+        run: |
+          npm version ${{ env.VERSION_NO_V }} --no-git-tag-version
 
-    - name: Build
-      run: npm run build
-      env:
-        APP_VERSION: ${{ env.APP_VERSION }}
+      - name: Build
+        run: npm run build
+        env:
+          APP_VERSION: ${{ env.APP_VERSION }}
 
-    # Packaging Steps (Only on Release)
-    - name: Setup Ruby (for FPM)
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.0'
+      # Packaging Steps (Only on Release)
+      - name: Setup Ruby (for FPM)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.0"
 
-    - name: Install FPM
-      run: gem install fpm
+      - name: Install FPM
+        run: gem install fpm
 
-    - name: Prepare Staging Area
-      run: |
-        mkdir -p staging/opt/hiveden-dashboard
-        mkdir -p staging/usr/lib/systemd/system
-        
-        # Copy standalone build
-        cp -r .next/standalone/* staging/opt/hiveden-dashboard/
-        
-        # Copy static assets (required for standalone)
-        cp -r public staging/opt/hiveden-dashboard/public
-        mkdir -p staging/opt/hiveden-dashboard/.next
-        cp -r .next/static staging/opt/hiveden-dashboard/.next/static
-        
-        # Copy service file
-        cp hiveden-dashboard.service staging/usr/lib/systemd/system/
-    
-    - name: Build
-      run: npm run build
-      env:
-        APP_VERSION: ${{ env.APP_VERSION }}
+      - name: Prepare Staging Area
+        run: |
+          mkdir -p staging/opt/hiveden-dashboard
+          mkdir -p staging/usr/lib/systemd/system
 
-    - name: Install bsdtar
-      run: sudo apt-get update && sudo apt-get install -y libarchive-tools
+          # Copy standalone build
+          cp -r .next/standalone/* staging/opt/hiveden-dashboard/
 
-    - name: Setup Ruby (for FPM)
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.0'
+          # Copy static assets (required for standalone)
+          cp -r public staging/opt/hiveden-dashboard/public
+          mkdir -p staging/opt/hiveden-dashboard/.next
+          cp -r .next/static staging/opt/hiveden-dashboard/.next/static
 
-    - name: Build Debian Package (.deb)
-      run: |
-        fpm -s dir -t deb \
-          -n hiveden-dashboard \
-          -v ${{ env.VERSION_NO_V }} \
-          -a x86_64 \
-          --description "Hiveden Dashboard" \
-          --url "https://github.com/${{ github.repository }}" \
-          --maintainer "Hiveden" \
-          -C staging .
+          # Copy service file
+          cp hiveden-dashboard.service staging/usr/lib/systemd/system/
 
-    - name: Build Fedora Package (.rpm)
-      run: |
-        fpm -s dir -t rpm \
-          -n hiveden-dashboard \
-          -v ${{ env.VERSION_NO_V }} \
-          -a x86_64 \
-          --description "Hiveden Dashboard" \
-          --url "https://github.com/${{ github.repository }}" \
-          --maintainer "Hiveden" \
-          -C staging .
+      - name: Build
+        run: npm run build
+        env:
+          APP_VERSION: ${{ env.APP_VERSION }}
 
-    - name: Build Arch Linux Package (.pkg.tar.zst)
-      run: |
-        fpm -s dir -t pacman \
-          -n hiveden-dashboard \
-          -v ${{ env.VERSION_NO_V }} \
-          -a x86_64 \
-          --description "Hiveden Dashboard" \
-          --url "https://github.com/${{ github.repository }}" \
-          --maintainer "Hiveden" \
-          -C staging .
-          
-        # FPM usually creates .pkg.tar.xz or .pkg.tar, rename if necessary to match standard conventions if needed
-        # But uploading whatever FPM produces is fine.
+      - name: Install bsdtar
+        run: sudo apt-get update && sudo apt-get install -y libarchive-tools
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ env.APP_VERSION }}
-        release_name: Release ${{ env.APP_VERSION }}
-        draft: false
-        prerelease: false
+      - name: Setup Ruby (for FPM)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.0"
 
-    - name: Upload Release Assets
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        gh release upload ${{ env.APP_VERSION }} *.deb *.rpm *.pkg.tar.zst --clobber
+      - name: Build Debian Package (.deb)
+        run: |
+          fpm -s dir -t deb \
+            -n hiveden-dashboard \
+            -v ${{ env.VERSION_NO_V }} \
+            -a x86_64 \
+            --description "Hiveden Dashboard" \
+            --url "https://github.com/${{ github.repository }}" \
+            --maintainer "Hiveden" \
+            -C staging .
+
+      - name: Build Fedora Package (.rpm)
+        run: |
+          fpm -s dir -t rpm \
+            -n hiveden-dashboard \
+            -v ${{ env.VERSION_NO_V }} \
+            -a x86_64 \
+            --description "Hiveden Dashboard" \
+            --url "https://github.com/${{ github.repository }}" \
+            --maintainer "Hiveden" \
+            -C staging .
+
+      - name: Build Arch Linux Package (.pkg.tar.zst)
+        run: |
+          fpm -s dir -t pacman \
+            -n hiveden-dashboard \
+            -v ${{ env.VERSION_NO_V }} \
+            -a x86_64 \
+            --description "Hiveden Dashboard" \
+            --url "https://github.com/${{ github.repository }}" \
+            --maintainer "Hiveden" \
+            -C staging .
+
+          # FPM usually creates .pkg.tar.xz or .pkg.tar, rename if necessary to match standard conventions if needed
+          # But uploading whatever FPM produces is fine.
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.APP_VERSION }}
+          release_name: Release ${{ env.APP_VERSION }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ env.APP_VERSION }} *.deb *.rpm *.pkg.tar.zst --clobber
