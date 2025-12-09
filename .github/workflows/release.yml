@@ -36,7 +36,7 @@ jobs:
         run: |
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
             echo "APP_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-            echo "VERSION_NO_V=${APP_VERSION#v}" >> $GITHUB_ENV
+            echo "VERSION_NO_V=${{ github.ref_name }}" >> $GITHUB_ENV
           elif [[ "${{ github.event_name }}" == "push" ]]; then
             SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
             echo "APP_VERSION=v0.0.0-${SHORT_SHA}" >> $GITHUB_ENV
