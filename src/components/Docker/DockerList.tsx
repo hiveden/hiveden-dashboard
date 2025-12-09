@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { stopContainer, startContainer, removeContainer } from '@/actions/docker';
-import { Table, Group, Badge, ActionIcon, Pagination, Stack, Select, Text, Checkbox } from '@mantine/core';
-import { IconTrash, IconPlayerStop, IconPlayerPlay, IconEye, IconCheck, IconX } from '@tabler/icons-react';
-import { useState } from 'react';
-import type { Container } from '@/lib/client';
-import Link from 'next/link';
-import { notifications } from '@mantine/notifications';
+import { stopContainer, startContainer, removeContainer } from "@/actions/docker";
+import { Table, Group, Badge, ActionIcon, Pagination, Stack, Select, Text, Checkbox, Tooltip } from "@mantine/core";
+import { IconTrash, IconPlayerStop, IconPlayerPlay, IconEye, IconCheck, IconX } from "@tabler/icons-react";
+import { useState } from "react";
+import type { Container } from "@/lib/client";
+import Link from "next/link";
+import { notifications } from "@mantine/notifications";
 
 interface DockerListProps {
   containers: Container[];
@@ -17,22 +17,22 @@ interface DockerListProps {
 export function DockerList({ containers, selectedRows, setSelectedRows }: DockerListProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const [activePage, setActivePage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState<string>('10');
+  const [itemsPerPage, setItemsPerPage] = useState<string>("10");
 
   const handleStart = async (id: string) => {
     setLoading(id);
     try {
       await startContainer(id);
       notifications.show({
-        title: 'Container started',
-        message: 'The container has been started successfully',
-        color: 'green',
+        title: "Container started",
+        message: "The container has been started successfully",
+        color: "green",
       });
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: error instanceof Error ? error.message : 'Failed to start container',
-        color: 'red',
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to start container",
+        color: "red",
       });
     } finally {
       setLoading(null);
@@ -44,15 +44,15 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
     try {
       await stopContainer(id);
       notifications.show({
-        title: 'Container stopped',
-        message: 'The container has been stopped successfully',
-        color: 'green',
+        title: "Container stopped",
+        message: "The container has been stopped successfully",
+        color: "green",
       });
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: error instanceof Error ? error.message : 'Failed to stop container',
-        color: 'red',
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to stop container",
+        color: "red",
       });
     } finally {
       setLoading(null);
@@ -60,20 +60,20 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
   };
 
   const handleRemove = async (id: string) => {
-    if (!confirm('Are you sure?')) return;
+    if (!confirm("Are you sure?")) return;
     setLoading(id);
     try {
       await removeContainer(id);
       notifications.show({
-        title: 'Container deleted',
-        message: 'The container has been deleted successfully',
-        color: 'green',
+        title: "Container deleted",
+        message: "The container has been deleted successfully",
+        color: "green",
       });
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: error instanceof Error ? error.message : 'Failed to delete container',
-        color: 'red',
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to delete container",
+        color: "red",
       });
     } finally {
       setLoading(null);
@@ -82,7 +82,7 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
 
   // Check if container is managed by Hiveden (has hiveden label)
   const isManagedByHiveden = (container: Container): boolean => {
-    return !!(container.Labels && container.Labels['managed-by'] === 'hiveden');
+    return !!(container.Labels && container.Labels["managed-by"] === "hiveden");
   };
 
   // Pagination logic
@@ -115,7 +115,7 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
     if (selectedRows.size === paginatedContainers.length) {
       setSelectedRows(new Set());
     } else {
-      setSelectedRows(new Set(paginatedContainers.map(c => c.Id)));
+      setSelectedRows(new Set(paginatedContainers.map((c) => c.Id)));
     }
   };
 
@@ -123,22 +123,14 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
   const someSelected = selectedRows.size > 0 && selectedRows.size < paginatedContainers.length;
 
   const rows = paginatedContainers.map((container) => (
-    <Table.Tr 
-      key={container.Id}
-      bg={selectedRows.has(container.Id) ? 'var(--mantine-color-blue-light)' : undefined}
-    >
+    <Table.Tr key={container.Id} bg={selectedRows.has(container.Id) ? "var(--mantine-color-blue-light)" : undefined}>
       <Table.Td>
-        <Checkbox
-          checked={selectedRows.has(container.Id)}
-          onChange={() => toggleRow(container.Id)}
-        />
+        <Checkbox checked={selectedRows.has(container.Id)} onChange={() => toggleRow(container.Id)} />
       </Table.Td>
       <Table.Td>{container.Name}</Table.Td>
       <Table.Td>{container.Image}</Table.Td>
       <Table.Td>
-        <Badge color={container.State === 'running' ? 'green' : 'gray'}>
-          {container.State || 'Unknown'}
-        </Badge>
+        <Badge color={container.State === "running" ? "green" : "gray"}>{container.State || "Unknown"}</Badge>
       </Table.Td>
       <Table.Td>
         {isManagedByHiveden(container) ? (
@@ -153,41 +145,29 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
       </Table.Td>
       <Table.Td>
         <Group gap="xs">
-          <ActionIcon 
-            component={Link}
-            href={`/docker/${container.Id}`}
-            variant="light" 
-            color="blue"
-          >
+          <ActionIcon component={Link} href={`/docker/${container.Id}`} variant="light" color="blue">
             <IconEye size={16} />
           </ActionIcon>
-          {container.State === 'running' ? (
-            <ActionIcon 
-              variant="light" 
-              color="orange" 
-              onClick={() => handleStop(container.Id)}
-              loading={loading === container.Id}
-            >
+          {container.State === "running" ? (
+            <ActionIcon variant="light" color="orange" onClick={() => handleStop(container.Id)} loading={loading === container.Id}>
               <IconPlayerStop size={16} />
             </ActionIcon>
           ) : (
-            <ActionIcon 
-              variant="light" 
-              color="green" 
-              onClick={() => handleStart(container.Id)}
-              loading={loading === container.Id}
-            >
+            <ActionIcon variant="light" color="green" onClick={() => handleStart(container.Id)} loading={loading === container.Id}>
               <IconPlayerPlay size={16} />
             </ActionIcon>
           )}
-          <ActionIcon 
-            variant="light" 
-            color="red" 
-            onClick={() => handleRemove(container.Id)}
-            loading={loading === container.Id}
-          >
-            <IconTrash size={16} />
-          </ActionIcon>
+          <Tooltip label="Please stop the container first in order to delete it" disabled={!(container.State === "running")} withArrow>
+            <ActionIcon
+              variant="light"
+              color="red"
+              onClick={() => handleRemove(container.Id)}
+              loading={loading === container.Id}
+              disabled={container.State === "running"}
+            >
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Tooltip>
         </Group>
       </Table.Td>
     </Table.Tr>
@@ -199,11 +179,7 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
         <Table.Thead>
           <Table.Tr>
             <Table.Th>
-              <Checkbox
-                checked={allSelected}
-                indeterminate={someSelected}
-                onChange={toggleAll}
-              />
+              <Checkbox checked={allSelected} indeterminate={someSelected} onChange={toggleAll} />
             </Table.Th>
             <Table.Th>Name</Table.Th>
             <Table.Th>Image</Table.Th>
@@ -219,18 +195,9 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
         <Group justify="space-between">
           <Group gap="xs">
             <Text size="sm">Items per page:</Text>
-            <Select
-              value={itemsPerPage}
-              onChange={handleItemsPerPageChange}
-              data={['10', '25', '50', '100']}
-              w={80}
-            />
+            <Select value={itemsPerPage} onChange={handleItemsPerPageChange} data={["10", "25", "50", "100"]} w={80} />
           </Group>
-          <Pagination 
-            value={activePage} 
-            onChange={setActivePage} 
-            total={totalPages}
-          />
+          <Pagination value={activePage} onChange={setActivePage} total={totalPages} />
         </Group>
       )}
     </Stack>
