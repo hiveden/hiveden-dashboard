@@ -97,7 +97,7 @@ jobs:
         run: |
           fpm -s dir -t deb \
             -n hiveden-dashboard \
-            -v ${{ env.VERSION_NO_V }} \
+            -v ${{ env.APP_VERSION }} \
             -a x86_64 \
             --description "Hiveden Dashboard" \
             --url "https://github.com/${{ github.repository }}" \
@@ -108,7 +108,7 @@ jobs:
         run: |
           fpm -s dir -t rpm \
             -n hiveden-dashboard \
-            -v ${{ env.VERSION_NO_V }} \
+            -v ${{ env.APP_VERSION }} \
             -a x86_64 \
             --description "Hiveden Dashboard" \
             --url "https://github.com/${{ github.repository }}" \
@@ -119,7 +119,7 @@ jobs:
         run: |
           fpm -s dir -t pacman \
             -n hiveden-dashboard \
-            -v ${{ env.VERSION_NO_V }} \
+            -v ${{ env.APP_VERSION }} \
             -a x86_64 \
             --description "Hiveden Dashboard" \
             --url "https://github.com/${{ github.repository }}" \
