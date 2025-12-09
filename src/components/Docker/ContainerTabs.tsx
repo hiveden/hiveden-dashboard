@@ -16,7 +16,7 @@ interface ExtendedContainer extends DockerContainerInfo {
 interface PortBinding {
   HostPort?: string | number;
   host_port?: number;
-  container_port?: number;
+  container_port?: string | number;
   protocol?: string;
 }
 
@@ -141,7 +141,14 @@ export function ContainerTabs({ container }: { container: ExtendedContainer }) {
             <Card shadow="sm" padding="lg" radius="md" withBorder>
               <Text fw={500} size="lg" mb="md">Port Mappings</Text>
               <SimpleGrid cols={{ base: 1, md: 2 }}>
-                {Object.values(container.Ports).flat().map((port: PortBinding, idx) => (
+                {Object.entries(container.Ports).flatMap(([key, value]) => {
+                  if (!value) return [];
+                  return (value as any[]).map(binding => ({
+                    ...binding,
+                    container_port: key,
+                    protocol: key.split('/')[1] || 'tcp'
+                  }));
+                }).map((port: PortBinding, idx) => (
                   <div key={idx}>
                     <Text size="sm">
                       <Code>{port.HostPort || port.host_port}</Code> → <Code>{port.container_port || '?'}</Code>
