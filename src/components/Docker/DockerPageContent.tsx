@@ -1,12 +1,12 @@
 'use client';
 
-import { Container, Title, Group, Collapse, Button } from '@mantine/core';
+import { Container, Title, Group, Collapse, Button, Menu, ActionIcon, rem } from '@mantine/core';
 import { DockerList } from './DockerList';
 import { ContainerActions } from './ContainerActions';
 import { useState } from 'react';
 import type { Container as DockerContainer } from '@/lib/client';
 import Link from 'next/link';
-import { IconPlus } from '@tabler/icons-react';
+import { IconPlus, IconChevronDown, IconFileImport } from '@tabler/icons-react';
 
 export function DockerPageContent({ containers }: { containers: DockerContainer[] }) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -26,9 +26,37 @@ export function DockerPageContent({ containers }: { containers: DockerContainer[
                 containerState={selectedContainerState}
             />
             </Collapse>
-            <Button component={Link} href="/docker/containers/new" leftSection={<IconPlus size={16} />}>
-                Add Container
-            </Button>
+            <Group gap={0}>
+              <Button 
+                component={Link} 
+                href="/docker/containers/new" 
+                leftSection={<IconPlus size={16} />}
+                style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+              >
+                  Add Container
+              </Button>
+              <Menu transitionProps={{ transition: 'pop' }} position="bottom-end" withinPortal>
+                <Menu.Target>
+                  <ActionIcon
+                    variant="filled"
+                    size={36}
+                    style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeft: '1px solid rgba(255, 255, 255, 0.2)' }}
+                    aria-label="More options"
+                  >
+                    <IconChevronDown style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    component={Link}
+                    href="/docker/new/import-compose"
+                    leftSection={<IconFileImport style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
+                  >
+                    Import from Docker Compose
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
         </Group>
       </Group>
       <DockerList 

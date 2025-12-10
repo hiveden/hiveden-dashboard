@@ -1,7 +1,3 @@
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { 
   TextInput, 
   Button, 
@@ -13,180 +9,42 @@ import {
   Select, 
   Paper, 
   Title,
-  LoadingOverlay
 } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
-import { createContainer, createTemplate } from '@/actions/docker';
-import { ContainerCreate, TemplateCreate, EnvVar, Port, Mount } from '@/lib/client';
+import { UseContainerFormReturn } from '@/hooks/useContainerForm';
 
-export function ContainerForm() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  
-  // We use a modified type for the form state to handle the command as a string[]
-  type ContainerFormState = Omit<ContainerCreate, 'command'> & {
-    command: string[];
-  };
+interface ContainerFormProps {
+  form: UseContainerFormReturn;
+}
 
-  // Note: is_container and type are not part of the form state anymore.
-  const [formData, setFormData] = useState<ContainerFormState>({
-    name: '',
-    image: '',
-    command: [],
-    env: [],
-    ports: [],
-    mounts: [],
-    labels: {},
-    enabled: true,
-  });
-
-  // Helper to update simple fields
-  const handleChange = (field: keyof ContainerFormState, value: unknown) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  // Command List Helpers
-  const addCommandArg = () => {
-    setFormData(prev => ({ ...prev, command: [...prev.command, ''] }));
-  };
-
-  const removeCommandArg = (index: number) => {
-    setFormData(prev => ({ ...prev, command: prev.command.filter((_, i) => i !== index) }));
-  };
-
-  const updateCommandArg = (index: number, value: string) => {
-    setFormData(prev => {
-      const newCommand = [...prev.command];
-      newCommand[index] = value;
-      return { ...prev, command: newCommand };
-    });
-  };
-
-  // Dynamic List Helpers
-  const addEnv = () => {
-    setFormData(prev => ({ ...prev, env: [...(prev.env || []), { name: '', value: '' }] }));
-  };
-
-  const removeEnv = (index: number) => {
-    setFormData(prev => ({ ...prev, env: (prev.env || []).filter((_, i) => i !== index) }));
-  };
-
-  const updateEnv = (index: number, field: keyof EnvVar, value: string) => {
-    setFormData(prev => {
-      const newEnv = [...(prev.env || [])];
-      newEnv[index] = { ...newEnv[index], [field]: value };
-      return { ...prev, env: newEnv };
-    });
-  };
-
-  const addPort = () => {
-    setFormData(prev => ({ ...prev, ports: [...(prev.ports || []), { host_port: 0, container_port: 0, protocol: 'tcp' }] }));
-  };
-
-  const removePort = (index: number) => {
-    setFormData(prev => ({ ...prev, ports: (prev.ports || []).filter((_, i) => i !== index) }));
-  };
-
-  const updatePort = (index: number, field: keyof Port, value: unknown) => {
-    setFormData(prev => {
-      const newPorts = [...(prev.ports || [])];
-      newPorts[index] = { ...newPorts[index], [field]: value };
-      return { ...prev, ports: newPorts };
-    });
-  };
-
-  const addMount = () => {
-    setFormData(prev => ({ ...prev, mounts: [...(prev.mounts || []), { source: '', target: '', type: 'bind' }] }));
-  };
-
-  const removeMount = (index: number) => {
-    setFormData(prev => ({ ...prev, mounts: (prev.mounts || []).filter((_, i) => i !== index) }));
-  };
-
-  const updateMount = (index: number, field: keyof Mount, value: unknown) => {
-    setFormData(prev => {
-      const newMounts = [...(prev.mounts || [])];
-      newMounts[index] = { ...newMounts[index], [field]: value };
-      return { ...prev, mounts: newMounts };
-    });
-  };
-
-  // Handle Labels separately since it's a Record<string, string>
-  const [labelsList, setLabelsList] = useState<{ key: string; value: string }[]>([]);
-
-  const addLabel = () => {
-    setLabelsList(prev => [...prev, { key: '', value: '' }]);
-  };
-
-  const removeLabel = (index: number) => {
-    setLabelsList(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const updateLabel = (index: number, field: 'key' | 'value', value: string) => {
-    setLabelsList(prev => {
-      const newLabels = [...prev];
-      newLabels[index] = { ...newLabels[index], [field]: value };
-      return newLabels;
-    });
-  };
-
-  const handleSubmit = async (mode: 'container' | 'template') => {
-    setLoading(true);
-    try {
-      // Convert labelsList back to Record
-      const labelsRecord: Record<string, string> = {};
-      labelsList.forEach(l => {
-        if (l.key) labelsRecord[l.key] = l.value;
-      });
-
-      const commonData = { 
-        ...formData, 
-        labels: labelsRecord,
-        command: formData.command.length > 0 ? formData.command : null 
-      };
-      
-      if (mode === 'container') {
-        const payload: ContainerCreate = {
-          ...commonData,
-          is_container: true,
-          // type is not strictly needed if backend defaults, but let's leave it undefined or set it if needed
-          // The previous code set type: 'docker', but the new requirements imply specific handling.
-          // We'll rely on is_container=true
-        };
-        await createContainer(payload);
-      } else {
-        const payload: TemplateCreate = {
-          ...commonData,
-          is_container: false,
-          type: 'template'
-        };
-        await createTemplate(payload);
-      }
-      
-      // Check response status if applicable
-      // The generated client returns the response body directly. 
-      // If it failed, it likely threw an error (handled in catch).
-      // Assuming success if we reach here.
-      
-      router.push('/docker');
-      router.refresh(); // Ensure the list updates
-
-    } catch (error) {
-      alert(`Failed to ${mode === 'container' ? 'create container' : 'save template'}: ${(error as Error).message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+export function ContainerForm({ form }: ContainerFormProps) {
+  const { 
+    formData, 
+    labelsList,
+    handleChange,
+    addCommandArg,
+    removeCommandArg,
+    updateCommandArg,
+    addEnv,
+    removeEnv,
+    updateEnv,
+    addPort,
+    removePort,
+    updatePort,
+    addMount,
+    removeMount,
+    updateMount,
+    addLabel,
+    removeLabel,
+    updateLabel
+  } = form;
 
   return (
     <Box pos="relative">
-      <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
-      
       <Stack gap="lg">
         <Paper p="md" withBorder radius="md">
             <Group justify="space-between" mb="md">
                 <Title order={4}>General Configuration</Title>
-                {/* Switch removed as per requirements */}
             </Group>
             <SimpleGridWrapper>
                 <TextInput 
@@ -344,17 +202,6 @@ export function ContainerForm() {
                 </Button>
             </Stack>
         </Paper>
-
-        <Group justify="flex-end" mt="xl">
-             <Button variant="default" onClick={() => router.back()}>Cancel</Button>
-             <Button variant="outline" onClick={() => handleSubmit('template')} loading={loading}>
-                 Save Template
-             </Button>
-             <Button onClick={() => handleSubmit('container')} loading={loading}>
-                 Deploy Container
-             </Button>
-        </Group>
-
       </Stack>
     </Box>
   );
