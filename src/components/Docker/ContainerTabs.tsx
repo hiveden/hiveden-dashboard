@@ -1,12 +1,12 @@
-'use client';
-
-import { SegmentedControl, Card, Text, Badge, Stack, Code, SimpleGrid, Box, Tooltip, Loader, Center } from '@mantine/core';
-import { IconTerminal } from '@tabler/icons-react';
-import { useState, useEffect, useMemo } from 'react';
-import type { Container as DockerContainerInfo, EnvVar, Mount } from '@/lib/client';
-import { ContainerLogs } from './ContainerLogs';
-import { Terminal } from '@/components/Terminal/Terminal';
-import { ShellService } from '@/services/shellService';
+"use client";
+import { parseCommand } from "@/lib/commandParser";
+import { SegmentedControl, Card, Text, Badge, Stack, Code, SimpleGrid, Box, Tooltip, Loader, Center } from "@mantine/core";
+import { IconTerminal } from "@tabler/icons-react";
+import { useState, useEffect, useMemo } from "react";
+import type { Container as DockerContainerInfo, EnvVar, Mount } from "@/lib/client";
+import { ContainerLogs } from "./ContainerLogs";
+import { Terminal } from "@/components/Terminal/Terminal";
+import { ShellService } from "@/services/shellService";
 
 interface ExtendedContainer extends DockerContainerInfo {
   Env?: EnvVar[];
@@ -21,7 +21,7 @@ interface PortBinding {
 }
 
 export function ContainerTabs({ container }: { container: ExtendedContainer }) {
-  const [activeTab, setActiveTab] = useState('info');
+  const [activeTab, setActiveTab] = useState("info");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoadingShell, setIsLoadingShell] = useState(false);
   const [shellError, setShellError] = useState<string | null>(null);
@@ -29,18 +29,18 @@ export function ContainerTabs({ container }: { container: ExtendedContainer }) {
 
   useEffect(() => {
     const createShellSession = async () => {
-      if (activeTab === 'shell' && !sessionId && container.State === 'running') {
+      if (activeTab === "shell" && !sessionId && container.State === "running") {
         setIsLoadingShell(true);
         setShellError(null);
         try {
           const session = await shellService.createDockerSession(container.Id, {
-            user: 'root',
-            working_dir: '/'
+            user: "root",
+            working_dir: "/",
           });
           setSessionId(session.session_id);
         } catch (error) {
-          console.error('Failed to create shell session:', error);
-          setShellError(error instanceof Error ? error.message : 'Failed to create shell session');
+          console.error("Failed to create shell session:", error);
+          setShellError(error instanceof Error ? error.message : "Failed to create shell session");
         } finally {
           setIsLoadingShell(false);
         }
@@ -62,12 +62,14 @@ export function ContainerTabs({ container }: { container: ExtendedContainer }) {
       try {
         await shellService.closeSession(sessionId);
         setSessionId(null);
-        setActiveTab('info');
+        setActiveTab("info");
       } catch (error) {
-        console.error('Failed to close shell session:', error);
+        console.error("Failed to close shell session:", error);
       }
     }
   };
+
+  const formattedCommand = useMemo(() => parseCommand(container.Command).join("\n"), [container.Command]);
 
   return (
     <>
@@ -76,48 +78,60 @@ export function ContainerTabs({ container }: { container: ExtendedContainer }) {
           value={activeTab}
           onChange={setActiveTab}
           data={[
-            { label: 'Container Information', value: 'info' },
-            { label: 'Logs', value: 'logs' },
-            { label: 'Raw Data', value: 'raw' },
-            { label: 'Shell', value: 'shell' },
+            { label: "Container Information", value: "info" },
+            { label: "Logs", value: "logs" },
+            { label: "Raw Data", value: "raw" },
+            { label: "Shell", value: "shell" },
           ]}
           mb="md"
         />
       </Tooltip.Group>
 
-      {activeTab === 'info' && (
+      {activeTab === "info" && (
         <Stack gap="md">
           <Card shadow="sm" padding="lg" radius="md" withBorder>
-            <Text fw={500} size="lg" mb="md">Basic Information</Text>
+            <Text fw={500} size="lg" mb="md">
+              Basic Information
+            </Text>
             <SimpleGrid cols={{ base: 1, md: 2 }}>
               <div>
-                <Text size="sm" c="dimmed">Name</Text>
-                <Text fw={500}>{container.Name || 'N/A'}</Text>
+                <Text size="sm" c="dimmed">
+                  Name
+                </Text>
+                <Text fw={500}>{container.Name || "N/A"}</Text>
               </div>
               <div>
-                <Text size="sm" c="dimmed">ID</Text>
+                <Text size="sm" c="dimmed">
+                  ID
+                </Text>
                 <Code>{container.Id}</Code>
               </div>
               <div>
-                <Text size="sm" c="dimmed">Image</Text>
+                <Text size="sm" c="dimmed">
+                  Image
+                </Text>
                 <Text fw={500}>{container.Image}</Text>
               </div>
               <div>
-                <Text size="sm" c="dimmed">State</Text>
-                <Badge color={container.State === 'running' ? 'green' : 'gray'}>
-                  {container.State || 'Unknown'}
-                </Badge>
+                <Text size="sm" c="dimmed">
+                  State
+                </Text>
+                <Badge color={container.State === "running" ? "green" : "gray"}>{container.State || "Unknown"}</Badge>
               </div>
               {container.Status && (
                 <div>
-                  <Text size="sm" c="dimmed">Status</Text>
+                  <Text size="sm" c="dimmed">
+                    Status
+                  </Text>
                   <Text fw={500}>{container.Status}</Text>
                 </div>
               )}
-              {container.Command && (
+              {container.Command && formattedCommand && (
                 <div>
-                  <Text size="sm" c="dimmed">Command</Text>
-                  <Code block>{container.Command}</Code>
+                  <Text size="sm" c="dimmed">
+                    Command
+                  </Text>
+                  <Code block>{formattedCommand}</Code>
                 </div>
               )}
             </SimpleGrid>
@@ -125,11 +139,15 @@ export function ContainerTabs({ container }: { container: ExtendedContainer }) {
 
           {container.Env && container.Env.length > 0 && (
             <Card shadow="sm" padding="lg" radius="md" withBorder>
-              <Text fw={500} size="lg" mb="md">Environment Variables</Text>
+              <Text fw={500} size="lg" mb="md">
+                Environment Variables
+              </Text>
               <Stack gap="xs">
                 {container.Env.map((env, idx) => (
                   <div key={idx}>
-                    <Text size="sm" c="dimmed">{env.name}</Text>
+                    <Text size="sm" c="dimmed">
+                      {env.name}
+                    </Text>
                     <Code block>{env.value}</Code>
                   </div>
                 ))}
@@ -139,34 +157,47 @@ export function ContainerTabs({ container }: { container: ExtendedContainer }) {
 
           {container.Ports && Object.values(container.Ports).length > 0 && (
             <Card shadow="sm" padding="lg" radius="md" withBorder>
-              <Text fw={500} size="lg" mb="md">Port Mappings</Text>
+              <Text fw={500} size="lg" mb="md">
+                Port Mappings
+              </Text>
               <SimpleGrid cols={{ base: 1, md: 2 }}>
-                {Object.entries(container.Ports).flatMap(([key, value]) => {
-                  if (!value) return [];
-                  return (value as any[]).map(binding => ({
-                    ...binding,
-                    container_port: key,
-                    protocol: key.split('/')[1] || 'tcp'
-                  }));
-                }).map((port: PortBinding, idx) => (
-                  <div key={idx}>
-                    <Text size="sm">
-                      <Code>{port.HostPort || port.host_port}</Code> → <Code>{port.container_port || '?'}</Code>
-                      {port.protocol && <Text span c="dimmed"> ({port.protocol})</Text>}
-                    </Text>
-                  </div>
-                ))}
+                {Object.entries(container.Ports)
+                  .flatMap(([key, value]) => {
+                    if (!value) return [];
+                    return (value as any[]).map((binding) => ({
+                      ...binding,
+                      container_port: key,
+                      protocol: key.split("/")[1] || "tcp",
+                    }));
+                  })
+                  .map((port: PortBinding, idx) => (
+                    <div key={idx}>
+                      <Text size="sm">
+                        <Code>{port.HostPort || port.host_port}</Code> → <Code>{port.container_port || "?"}</Code>
+                        {port.protocol && (
+                          <Text span c="dimmed">
+                            {" "}
+                            ({port.protocol})
+                          </Text>
+                        )}
+                      </Text>
+                    </div>
+                  ))}
               </SimpleGrid>
             </Card>
           )}
 
           {container.Mounts && container.Mounts.length > 0 && (
             <Card shadow="sm" padding="lg" radius="md" withBorder>
-              <Text fw={500} size="lg" mb="md">Mounts</Text>
+              <Text fw={500} size="lg" mb="md">
+                Mounts
+              </Text>
               <Stack gap="md">
                 {container.Mounts.map((mount, idx) => (
                   <div key={idx}>
-                    <Text size="sm" c="dimmed">Type: {mount.type || 'bind'}</Text>
+                    <Text size="sm" c="dimmed">
+                      Type: {mount.type || "bind"}
+                    </Text>
                     <Text size="sm">
                       <Code>{mount.source}</Code> → <Code>{mount.target}</Code>
                     </Text>
@@ -178,11 +209,15 @@ export function ContainerTabs({ container }: { container: ExtendedContainer }) {
 
           {container.Labels && Object.keys(container.Labels).length > 0 && (
             <Card shadow="sm" padding="lg" radius="md" withBorder>
-              <Text fw={500} size="lg" mb="md">Labels</Text>
+              <Text fw={500} size="lg" mb="md">
+                Labels
+              </Text>
               <SimpleGrid cols={{ base: 1, md: 3 }}>
                 {Object.entries(container.Labels).map(([key, value]) => (
                   <div key={key}>
-                    <Text size="sm" c="dimmed">{key}</Text>
+                    <Text size="sm" c="dimmed">
+                      {key}
+                    </Text>
                     <Code block>{String(value)}</Code>
                   </div>
                 ))}
@@ -192,24 +227,24 @@ export function ContainerTabs({ container }: { container: ExtendedContainer }) {
         </Stack>
       )}
 
-      {activeTab === 'logs' && (
-        <ContainerLogs containerId={container.Id} />
-      )}
+      {activeTab === "logs" && <ContainerLogs containerId={container.Id} />}
 
-      {activeTab === 'raw' && (
+      {activeTab === "raw" && (
         <Card shadow="sm" padding="lg" radius="md" withBorder>
-          <Text fw={500} size="lg" mb="md">Raw Data</Text>
-          <Code block>
-            {JSON.stringify(container, null, 2)}
-          </Code>
+          <Text fw={500} size="lg" mb="md">
+            Raw Data
+          </Text>
+          <Code block>{JSON.stringify(container, null, 2)}</Code>
         </Card>
       )}
 
-      {activeTab === 'shell' && (
+      {activeTab === "shell" && (
         <>
-          {container.State !== 'running' ? (
+          {container.State !== "running" ? (
             <Card shadow="sm" padding="lg" radius="md" withBorder>
-              <Text fw={500} size="lg" mb="md">Shell Access</Text>
+              <Text fw={500} size="lg" mb="md">
+                Shell Access
+              </Text>
               <Text c="dimmed">Container must be running to access shell.</Text>
             </Card>
           ) : isLoadingShell ? (
@@ -223,15 +258,13 @@ export function ContainerTabs({ container }: { container: ExtendedContainer }) {
             </Card>
           ) : shellError ? (
             <Card shadow="sm" padding="lg" radius="md" withBorder>
-              <Text fw={500} size="lg" mb="md">Shell Access</Text>
+              <Text fw={500} size="lg" mb="md">
+                Shell Access
+              </Text>
               <Text c="red">{shellError}</Text>
             </Card>
           ) : sessionId ? (
-            <Terminal 
-              sessionId={sessionId} 
-              onClose={handleCloseShell}
-              title={`Shell - ${container.Name || container.Id.substring(0, 12)}`}
-            />
+            <Terminal sessionId={sessionId} onClose={handleCloseShell} title={`Shell - ${container.Name || container.Id.substring(0, 12)}`} />
           ) : null}
         </>
       )}

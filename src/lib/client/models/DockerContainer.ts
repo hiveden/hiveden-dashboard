@@ -8,7 +8,7 @@ import type { Port } from './Port';
 export type DockerContainer = {
     name: string;
     image: string;
-    command?: (string | null);
+    command?: (Array<string> | null);
     env?: (Array<EnvVar> | null);
     ports?: (Array<Port> | null);
     mounts?: (Array<Mount> | null);

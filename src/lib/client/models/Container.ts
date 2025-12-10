@@ -9,7 +9,7 @@ export type Container = {
     Name: string;
     Image: string;
     ImageID: string;
-    Command: string;
+    Command: Array<string>;
     Created: string;
     State: string;
     Status: string;

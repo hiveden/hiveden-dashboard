@@ -23,14 +23,16 @@ export function ContainerForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   
-  // We use ContainerCreate as the base type for form state, 
-  // but we'll manage command/env/ports/mounts slightly differently for UI inputs if needed
-  // and construct the final payload on submit.
+  // We use a modified type for the form state to handle the command as a string[]
+  type ContainerFormState = Omit<ContainerCreate, 'command'> & {
+    command: string[];
+  };
+
   // Note: is_container and type are not part of the form state anymore.
-  const [formData, setFormData] = useState<ContainerCreate>({
+  const [formData, setFormData] = useState<ContainerFormState>({
     name: '',
     image: '',
-    command: '',
+    command: [],
     env: [],
     ports: [],
     mounts: [],
@@ -39,8 +41,25 @@ export function ContainerForm() {
   });
 
   // Helper to update simple fields
-  const handleChange = (field: keyof ContainerCreate, value: unknown) => {
+  const handleChange = (field: keyof ContainerFormState, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Command List Helpers
+  const addCommandArg = () => {
+    setFormData(prev => ({ ...prev, command: [...prev.command, ''] }));
+  };
+
+  const removeCommandArg = (index: number) => {
+    setFormData(prev => ({ ...prev, command: prev.command.filter((_, i) => i !== index) }));
+  };
+
+  const updateCommandArg = (index: number, value: string) => {
+    setFormData(prev => {
+      const newCommand = [...prev.command];
+      newCommand[index] = value;
+      return { ...prev, command: newCommand };
+    });
   };
 
   // Dynamic List Helpers
@@ -120,7 +139,11 @@ export function ContainerForm() {
         if (l.key) labelsRecord[l.key] = l.value;
       });
 
-      const commonData = { ...formData, labels: labelsRecord };
+      const commonData = { 
+        ...formData, 
+        labels: labelsRecord,
+        command: formData.command.length > 0 ? formData.command : null 
+      };
       
       if (mode === 'container') {
         const payload: ContainerCreate = {
@@ -181,13 +204,27 @@ export function ContainerForm() {
                     onChange={(e) => handleChange('image', e.target.value)}
                 />
             </SimpleGridWrapper>
-            <TextInput 
-                mt="md"
-                label="Command" 
-                placeholder="/bin/sh -c 'echo hello'" 
-                value={formData.command || ''}
-                onChange={(e) => handleChange('command', e.target.value)}
-            />
+        </Paper>
+
+        <Paper p="md" withBorder radius="md">
+            <Title order={4} mb="md">Command & Arguments</Title>
+            <Stack>
+                {formData.command.map((arg, index) => (
+                    <Group key={index} grow preventGrowOverflow={false} wrap="nowrap">
+                        <TextInput 
+                            placeholder={`Argument ${index + 1}`} 
+                            value={arg}
+                            onChange={(e) => updateCommandArg(index, e.target.value)}
+                        />
+                        <ActionIcon color="red" variant="subtle" onClick={() => removeCommandArg(index)}>
+                            <IconTrash size={16} />
+                        </ActionIcon>
+                    </Group>
+                ))}
+                <Button variant="light" leftSection={<IconPlus size={16} />} onClick={addCommandArg} size="xs" w="max-content">
+                    Add Argument
+                </Button>
+            </Stack>
         </Paper>
 
         <Paper p="md" withBorder radius="md">
