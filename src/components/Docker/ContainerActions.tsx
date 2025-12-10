@@ -82,15 +82,19 @@ export function ContainerActions({ containerId, containerState }: { containerId:
   };
 
   const isRunning = containerState === "running";
+  const isRestarting = containerState === "restarting";
+  const canStart = containerState === "exited" || containerState === "created";
+  const canStop = isRunning || isRestarting;
+  const canDelete = containerState === "exited" || containerState === "created" || containerState === "dead";
 
   return (
     <Group gap="xs">
-      {isRunning ? (
+      {canStop ? (
         <Button variant="light" color="orange" leftSection={<IconPlayerStop size={16} />} onClick={handleStop} loading={loading === "stop"}>
           Stop
         </Button>
       ) : (
-        <Button variant="light" color="green" leftSection={<IconPlayerPlay size={16} />} onClick={handleStart} loading={loading === "start"}>
+        <Button variant="light" color="green" leftSection={<IconPlayerPlay size={16} />} onClick={handleStart} loading={loading === "start"} disabled={!canStart}>
           Start
         </Button>
       )}
@@ -99,14 +103,14 @@ export function ContainerActions({ containerId, containerState }: { containerId:
         Restart
       </Button>
 
-      <Tooltip label="Please stop the container first in order to delete it" disabled={!isRunning} withArrow>
+      <Tooltip label="Container must be stopped to delete" disabled={canDelete} withArrow>
         <Button
           variant="light"
           color="red"
           leftSection={<IconTrash size={16} />}
           onClick={handleDelete}
           loading={loading === "delete"}
-          disabled={isRunning}
+          disabled={!canDelete}
         >
           Delete
         </Button>
