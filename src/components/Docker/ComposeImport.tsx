@@ -8,13 +8,16 @@ import yaml from "js-yaml";
 import { ContainerForm } from "./ContainerForm";
 import { useContainerForm, ContainerFormState } from "@/hooks/useContainerForm";
 import { EnvVar, Port, Mount } from "@/lib/client";
-import { handleCreateContainer, handleCreateTemplate } from '@/lib/container-submission';
+import { handleCreateContainer, handleCreateTemplate } from "@/lib/container-submission";
 
-export function ComposeImport() {
-  const router = useRouter();
+interface ComposeYamlInputProps {
+  onParsed: (data: Partial<ContainerFormState>) => void;
+  onCancel: () => void;
+}
+
+export function ComposeYamlInput({ onParsed, onCancel }: ComposeYamlInputProps) {
   const [yamlContent, setYamlContent] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [parsedData, setParsedData] = useState<Partial<ContainerFormState> | null>(null);
 
   const handleParse = () => {
     setError(null);
@@ -132,23 +135,14 @@ export function ComposeImport() {
         }
       }
 
-      setParsedData(mappedData);
+      onParsed(mappedData);
     } catch (e: any) {
       setError(e.message || "Failed to parse YAML");
     }
   };
 
-  if (parsedData) {
-    return (
-      <ImportStepWrapper 
-          initialValues={parsedData} 
-          onCancel={() => setParsedData(null)} 
-      />
-    );
-  }
-
   return (
-    <Box h="85vh">
+    <Box h="100%">
       <Title order={3} mb="lg">
         Import from Docker Compose
       </Title>
@@ -159,14 +153,14 @@ export function ComposeImport() {
         </Alert>
       )}
 
-      <Paper p="md" withBorder radius="md" h="80%">
-        <Stack justify="space-between" h="100%">
+      <Paper p="md" withBorder radius="md">
+        <Stack justify="space-between">
           <Textarea
             label="Docker Compose YAML"
             description="Paste your docker-compose.yml content here. We will parse the first service defined."
-            placeholder={`services:\n  web:\n    image: nginx:latest\n    ports:\n      - "8080:80"`}
-            minRows={28}
-            maxRows={28}
+            placeholder={`services:\n  web:\n    image: nginx:latest\n    ports:\n      - "8080:80"}`}
+            minRows={20}
+            maxRows={20}
             value={yamlContent}
             autosize
             onChange={(event) => setYamlContent(event.currentTarget.value)}
@@ -174,7 +168,7 @@ export function ComposeImport() {
           />
 
           <Group justify="flex-end">
-            <Button variant="default" onClick={() => router.push("/docker")}>
+            <Button variant="default" onClick={onCancel}>
               Cancel
             </Button>
             <Button onClick={handleParse} disabled={!yamlContent.trim()}>
@@ -187,28 +181,64 @@ export function ComposeImport() {
   );
 }
 
-function ImportStepWrapper({ initialValues, onCancel }: { initialValues: Partial<ContainerFormState>, onCancel: () => void }) {
-    const form = useContainerForm(initialValues);
-    const router = useRouter();
-    const [loading, setLoading] = useState(false);
+interface ComposeReviewProps {
+  initialValues: Partial<ContainerFormState>;
+  onBack: () => void;
+  onSubmit: (data: ContainerFormState) => void;
+}
 
-    return (
-      <Box pos="relative">
-        <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
-        <Title order={3} mb="lg">
-          Review & Create Container
-        </Title>
-        <ContainerForm form={form} />
-        
-        <Group justify="flex-end" mt="xl">
-            <Button variant="default" onClick={onCancel}>Back to Import</Button>
-            <Button variant="outline" onClick={() => handleCreateTemplate(form.formData, form.labelsList, router, setLoading)} loading={loading}>
-                Save Template
-            </Button>
-            <Button onClick={() => handleCreateContainer(form.formData, form.labelsList, router, setLoading)} loading={loading}>
-                Deploy Container
-            </Button>
-        </Group>
-      </Box>
-    );
+export function ComposeReview({ initialValues, onBack, onSubmit }: ComposeReviewProps) {
+  const form = useContainerForm(initialValues);
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  // Helper to merge labelsList into formData.labels before submitting
+  const prepareSubmissionData = () => {
+    const labelsRecord: Record<string, string> = {};
+    form.labelsList.forEach((l) => {
+      if (l.key) labelsRecord[l.key] = l.value;
+    });
+
+    return {
+      ...form.formData,
+      labels: labelsRecord,
+    };
+  };
+
+  const handleCreateTemplateClick = async () => {
+    setLoading(true);
+    try {
+      const data = prepareSubmissionData();
+      await handleCreateTemplate(data, form.labelsList, router, setLoading);
+    } catch (e) {
+      setLoading(false);
+    }
+  };
+
+  const handleDeployClick = () => {
+    const data = prepareSubmissionData();
+    onSubmit(data);
+  };
+
+  return (
+    <Box pos="relative">
+      <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
+      <Title order={3} mb="lg">
+        Review & Create Container
+      </Title>
+      <ContainerForm form={form} />
+
+      <Group justify="flex-end" mt="xl">
+        <Button variant="default" onClick={onBack} disabled={loading}>
+          Back to Import
+        </Button>
+        <Button variant="outline" onClick={handleCreateTemplateClick} loading={loading}>
+          Save Template
+        </Button>
+        <Button onClick={handleDeployClick} loading={loading}>
+          Deploy Container
+        </Button>
+      </Group>
+    </Box>
+  );
 }

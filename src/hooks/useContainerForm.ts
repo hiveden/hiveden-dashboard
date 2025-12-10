@@ -10,6 +10,7 @@ export interface UseContainerFormReturn {
   setFormData: React.Dispatch<React.SetStateAction<ContainerFormState>>;
   labelsList: { key: string; value: string }[];
   setLabelsList: React.Dispatch<React.SetStateAction<{ key: string; value: string }[]>>;
+  mountErrors: Record<number, { source?: string }>;
   handleChange: (field: keyof ContainerFormState, value: unknown) => void;
   // Command
   addCommandArg: () => void;
@@ -51,6 +52,21 @@ export function useContainerForm(initialValues?: Partial<ContainerFormState>): U
       return Object.entries(initialValues.labels).map(([key, value]) => ({ key, value }));
     }
     return [];
+  });
+
+  // Validation Helper
+  const validateMounts = (mounts: Mount[]) => {
+      const errors: Record<number, { source?: string }> = {};
+      mounts.forEach((mount, index) => {
+          if (mount.source && !mount.source.startsWith('/')) {
+              errors[index] = { source: 'Source path must be absolute' };
+          }
+      });
+      return errors;
+  };
+
+  const [mountErrors, setMountErrors] = useState<Record<number, { source?: string }>>(() => {
+     return validateMounts(initialValues?.mounts || []);
   });
 
   // Helper to update simple fields
@@ -113,13 +129,26 @@ export function useContainerForm(initialValues?: Partial<ContainerFormState>): U
   };
 
   const removeMount = (index: number) => {
-    setFormData(prev => ({ ...prev, mounts: (prev.mounts || []).filter((_, i) => i !== index) }));
+    setFormData(prev => {
+        const newMounts = prev.mounts?.filter((_, i) => i !== index) || [];
+        setMountErrors(validateMounts(newMounts));
+        return { ...prev, mounts: newMounts };
+    });
   };
 
   const updateMount = (index: number, field: keyof Mount, value: unknown) => {
     setFormData(prev => {
       const newMounts = [...(prev.mounts || [])];
       newMounts[index] = { ...newMounts[index], [field]: value };
+
+      // Update validation for specific field or re-validate all
+      if (field === 'source') {
+         // Optimistic update of errors for better perf than revalidating all
+         // But revalidating all is safer to keep in sync.
+         // Let's use the helper to ensure consistency
+         setMountErrors(validateMounts(newMounts));
+      }
+
       return { ...prev, mounts: newMounts };
     });
   };
@@ -145,6 +174,7 @@ export function useContainerForm(initialValues?: Partial<ContainerFormState>): U
     setFormData,
     labelsList,
     setLabelsList,
+    mountErrors,
     handleChange,
     addCommandArg,
     removeCommandArg,
@@ -163,3 +193,4 @@ export function useContainerForm(initialValues?: Partial<ContainerFormState>): U
     updateLabel,
   };
 }
+

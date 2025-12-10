@@ -21,6 +21,7 @@ export function ContainerForm({ form }: ContainerFormProps) {
   const { 
     formData, 
     labelsList,
+    mountErrors,
     handleChange,
     addCommandArg,
     removeCommandArg,
@@ -154,6 +155,7 @@ export function ContainerForm({ form }: ContainerFormProps) {
                             placeholder="Source Path (Host)" 
                             value={mount.source}
                             onChange={(e) => updateMount(index, 'source', e.target.value)}
+                            error={mountErrors[index]?.source}
                         />
                         <TextInput 
                             placeholder="Target Path (Container)" 
@@ -163,7 +165,7 @@ export function ContainerForm({ form }: ContainerFormProps) {
                          <Select
                             value={mount.type}
                             onChange={(val) => updateMount(index, 'type', val)}
-                            data={['bind', 'volume']}
+                            data={['bind']}
                             allowDeselect={false}
                         />
                         <ActionIcon color="red" variant="subtle" onClick={() => removeMount(index)}>
