@@ -9,7 +9,8 @@ import type {
   NetworkCreate, 
   SuccessResponse,
   TemplateCreate,
-  TemplateResponse
+  TemplateResponse,
+  ContainerResponse
 } from '@/lib/client';
 
 export async function listContainers(): Promise<DataResponse> {
@@ -38,6 +39,12 @@ export async function startContainer(containerId: string): Promise<DataResponse>
   const result = await DockerService.startOneContainerDockerContainersContainerIdStartPost(containerId);
   revalidatePath('/docker');
   return result;
+}
+
+export async function restartContainer(containerId: string): Promise<ContainerResponse> {
+    const result = await DockerService.restartOneContainerDockerContainersContainerIdRestartPost(containerId);
+    revalidatePath('/docker');
+    return result;
 }
 
 export async function removeContainer(containerId: string): Promise<SuccessResponse> {

@@ -3,7 +3,7 @@
 import { Button, Group, Tooltip } from "@mantine/core";
 import { IconPlayerPlay, IconPlayerStop, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
-import { stopContainer, startContainer, removeContainer } from "@/actions/docker";
+import { stopContainer, startContainer, removeContainer, restartContainer } from "@/actions/docker";
 import { useRouter } from "next/navigation";
 import { notifications } from "@mantine/notifications";
 
@@ -55,8 +55,23 @@ export function ContainerActions({ containerId, containerState }: { containerId:
 
   const handleRestart = async () => {
     setLoading("restart");
-    // TODO: Implement restart action when available in API
-    setLoading(null);
+    try {
+      await restartContainer(containerId);
+      notifications.show({
+        title: "Container restarted",
+        message: "The container has been restarted successfully",
+        color: "green",
+      });
+      router.refresh();
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to restart container",
+        color: "red",
+      });
+    } finally {
+      setLoading(null);
+    }
   };
 
   const handleDelete = async () => {
@@ -85,6 +100,7 @@ export function ContainerActions({ containerId, containerState }: { containerId:
   const isRestarting = containerState === "restarting";
   const canStart = containerState === "exited" || containerState === "created";
   const canStop = isRunning || isRestarting;
+  const canRestart = isRunning || isRestarting; // Can only restart if running or already restarting
   const canDelete = containerState === "exited" || containerState === "created" || containerState === "dead";
 
   return (
@@ -99,7 +115,14 @@ export function ContainerActions({ containerId, containerState }: { containerId:
         </Button>
       )}
 
-      <Button variant="light" color="blue" leftSection={<IconRefresh size={16} />} onClick={handleRestart} loading={loading === "restart"}>
+      <Button 
+        variant="light" 
+        color="blue" 
+        leftSection={<IconRefresh size={16} />} 
+        onClick={handleRestart} 
+        loading={loading === "restart"}
+        disabled={!canRestart} // Disable if not running or restarting
+      >
         Restart
       </Button>
 
