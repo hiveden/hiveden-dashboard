@@ -2,7 +2,7 @@
 
 import { AppShell, Burger, Group, NavLink, Text, useMantineColorScheme, ActionIcon, Badge } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconBrandDocker, IconServer, IconShare, IconInfoCircle, IconSun, IconMoon, IconTemplate, IconFileText, IconPackage, IconDatabase } from '@tabler/icons-react';
+import { IconBrandDocker, IconServer, IconShare, IconInfoCircle, IconSun, IconMoon, IconTemplate, IconFileText, IconPackage, IconDatabase, IconFolder } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -24,6 +24,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { label: 'System Info', icon: IconInfoCircle, link: '/' },
+    { label: 'File Explorer', icon: IconFolder, link: '/files' },
     { label: 'Storage', icon: IconDatabase, link: '/storage' },
     { label: 'Docker', icon: IconBrandDocker, link: '/docker' },
     { label: 'LXC', icon: IconServer, link: '/lxc' },
@@ -36,11 +37,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { label: 'Required Packages', icon: IconPackage, link: '/packages' },
   ];
 
+  const isFiles = pathname.startsWith('/files');
+  const navbarWidth = isFiles ? 80 : 300;
+
   return (
     <AppShell
       header={{ height: 60 }}
       navbar={{
-        width: 300,
+        width: navbarWidth,
         breakpoint: 'sm',
         collapsed: { mobile: !opened },
       }}
@@ -75,7 +79,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               key={item.link}
               component={Link}
               href={item.link}
-              label={item.label}
+              label={!isFiles ? item.label : null}
               leftSection={<item.icon size="1rem" stroke={1.5} />}
               active={pathname === item.link || (item.link !== '/' && pathname.startsWith(item.link))}
               variant="light"
@@ -88,7 +92,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               key={item.link}
               component={Link}
               href={item.link}
-              label={item.label}
+              label={!isFiles ? item.label : null}
               leftSection={<item.icon size="1rem" stroke={1.5} />}
               active={pathname === item.link || (item.link !== '/' && pathname.startsWith(item.link))}
               variant="light"
