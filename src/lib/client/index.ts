@@ -17,6 +17,7 @@ export type { ClipboardPasteRequest } from './models/ClipboardPasteRequest';
 export type { ClipboardStatusResponse } from './models/ClipboardStatusResponse';
 export type { ConfigUpdateRequest } from './models/ConfigUpdateRequest';
 export type { Container } from './models/Container';
+export type { ContainerConfigResponse } from './models/ContainerConfigResponse';
 export type { ContainerCreate } from './models/ContainerCreate';
 export type { ContainerCreateResponse } from './models/ContainerCreateResponse';
 export type { ContainerListResponse } from './models/ContainerListResponse';

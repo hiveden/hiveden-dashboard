@@ -10,7 +10,9 @@ import type {
   SuccessResponse,
   TemplateCreate,
   TemplateResponse,
-  ContainerResponse
+  ContainerResponse,
+  ContainerConfigResponse,
+  ContainerCreateResponse
 } from '@/lib/client';
 
 export async function listContainers(): Promise<DataResponse> {
@@ -27,6 +29,17 @@ export async function createTemplate(template: TemplateCreate): Promise<Template
 
 export async function getContainer(containerId: string): Promise<DataResponse> {
   return DockerService.getOneContainerDockerContainersContainerIdGet(containerId);
+}
+
+export async function getContainerConfiguration(containerId: string): Promise<ContainerConfigResponse> {
+    return DockerService.getContainerConfigurationDockerContainersContainerIdConfigGet(containerId);
+}
+
+export async function updateContainerConfiguration(containerId: string, config: ContainerCreate): Promise<ContainerCreateResponse> {
+    const result = await DockerService.updateContainerConfigurationDockerContainersContainerIdPut(containerId, config);
+    revalidatePath('/docker');
+    revalidatePath(`/docker/${containerId}`);
+    return result;
 }
 
 export async function stopContainer(containerId: string): Promise<DataResponse> {

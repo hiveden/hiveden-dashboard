@@ -2,7 +2,7 @@
 
 import { stopContainer, startContainer, removeContainer } from "@/actions/docker";
 import { Table, Group, Badge, ActionIcon, Pagination, Stack, Select, Text, Checkbox, Tooltip } from "@mantine/core";
-import { IconTrash, IconPlayerStop, IconPlayerPlay, IconEye, IconCheck, IconX } from "@tabler/icons-react";
+import { IconTrash, IconPlayerStop, IconPlayerPlay, IconEye, IconCheck, IconX, IconEdit } from "@tabler/icons-react";
 import { useState } from "react";
 import type { Container } from "@/lib/client";
 import Link from "next/link";
@@ -147,6 +147,9 @@ export function DockerList({ containers, selectedRows, setSelectedRows }: Docker
         <Group gap="xs">
           <ActionIcon component={Link} href={`/docker/${container.Id}`} variant="light" color="blue">
             <IconEye size={16} />
+          </ActionIcon>
+          <ActionIcon component={Link} href={`/docker/${container.Id}/edit`} variant="light" color="cyan">
+            <IconEdit size={16} />
           </ActionIcon>
           {container.State === "running" ? (
             <ActionIcon variant="light" color="orange" onClick={() => handleStop(container.Id)} loading={loading === container.Id}>
