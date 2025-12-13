@@ -6,5 +6,6 @@ export type Mount = {
     source: string;
     target: string;
     type?: string;
+    is_app_directory?: boolean;
 };
 

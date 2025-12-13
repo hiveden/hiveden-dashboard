@@ -9,6 +9,7 @@ import {
   Select, 
   Paper, 
   Title,
+  Checkbox,
 } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { UseContainerFormReturn } from '@/hooks/useContainerForm';
@@ -151,23 +152,34 @@ export function ContainerForm({ form }: ContainerFormProps) {
             <Stack>
                 {formData.mounts?.map((mount, index) => (
                     <Group key={index} grow preventGrowOverflow={false} wrap="nowrap">
+                        <Group grow preventGrowOverflow={false} wrap="wrap" w="100%">
                         <TextInput 
                             placeholder="Source Path (Host)" 
                             value={mount.source}
                             onChange={(e) => updateMount(index, 'source', e.target.value)}
                             error={mountErrors[index]?.source}
+                            style={{ flex: '1 1 30%' }}
                         />
                         <TextInput 
                             placeholder="Target Path (Container)" 
                             value={mount.target}
                             onChange={(e) => updateMount(index, 'target', e.target.value)}
+                            style={{ flex: '1 1 30%' }}
                         />
                          <Select
                             value={mount.type}
                             onChange={(val) => updateMount(index, 'type', val)}
                             data={['bind']}
                             allowDeselect={false}
+                            style={{ flex: '1 1 15%' }}
                         />
+                    </Group>
+                    <Checkbox
+                        label="Is application directory"
+                        checked={mount.is_app_directory || false}
+                        onChange={(event) => updateMount(index, 'is_app_directory', event.currentTarget.checked)}
+                        mt="xs"
+                    />
                         <ActionIcon color="red" variant="subtle" onClick={() => removeMount(index)}>
                             <IconTrash size={16} />
                         </ActionIcon>
