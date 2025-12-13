@@ -1,6 +1,7 @@
 "use client";
 
-import { ComposeYamlInput, ComposeReview } from '@/components/Docker/ComposeImport';
+import { ComposeYamlInput } from '@/components/Docker/ComposeImport';
+import { MultiContainerReview } from '@/components/Docker/MultiContainerReview';
 import { CreateDockerContainers } from '@/components/Docker/CreateDockerContainers';
 import { Container, Stepper, Box } from '@mantine/core';
 import { useState } from 'react';
@@ -9,11 +10,11 @@ import { ContainerFormState } from '@/hooks/useContainerForm';
 
 export default function ImportComposePage() {
   const [activeStep, setActiveStep] = useState(0);
-  const [parsedData, setParsedData] = useState<Partial<ContainerFormState> | null>(null);
+  const [parsedData, setParsedData] = useState<Partial<ContainerFormState>[]>([]);
   const [containersToCreate, setContainersToCreate] = useState<ContainerFormState[]>([]);
   const router = useRouter();
 
-  const handleParsed = (data: Partial<ContainerFormState>) => {
+  const handleParsed = (data: Partial<ContainerFormState>[]) => {
     setParsedData(data);
     setActiveStep(1);
   };
@@ -22,8 +23,8 @@ export default function ImportComposePage() {
     setActiveStep(0);
   };
   
-  const handleSubmit = (data: ContainerFormState) => {
-      setContainersToCreate([data]);
+  const handleSubmit = (data: ContainerFormState[]) => {
+      setContainersToCreate(data);
       setActiveStep(2);
   }
 
@@ -40,16 +41,16 @@ export default function ImportComposePage() {
         </Stepper.Step>
         <Stepper.Step label="Validation" description="Review Configuration">
             <Box py="md">
-                {parsedData && (
-                    <ComposeReview 
-                        initialValues={parsedData} 
+                {parsedData.length > 0 && (
+                    <MultiContainerReview 
+                        initialContainers={parsedData} 
                         onBack={handleBack}
                         onSubmit={handleSubmit}
                     />
                 )}
             </Box>
         </Stepper.Step>
-        <Stepper.Step label="Submit" description="Deploying Container">
+        <Stepper.Step label="Submit" description="Deploying Containers">
              <Box py="xl">
                  {activeStep === 2 && containersToCreate.length > 0 && (
                     <CreateDockerContainers containers={containersToCreate} />
